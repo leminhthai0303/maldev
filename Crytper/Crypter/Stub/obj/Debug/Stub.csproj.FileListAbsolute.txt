@@ -1,0 +1,9 @@
+D:\Code\project\Crytper\Crypter\Stub\bin\Debug\Stub.exe.config
+D:\Code\project\Crytper\Crypter\Stub\bin\Debug\Stub.exe
+D:\Code\project\Crytper\Crypter\Stub\bin\Debug\Stub.pdb
+D:\Code\project\Crytper\Crypter\Stub\obj\Debug\Stub.csproj.AssemblyReference.cache
+D:\Code\project\Crytper\Crypter\Stub\obj\Debug\Stub.Properties.Resources.resources
+D:\Code\project\Crytper\Crypter\Stub\obj\Debug\Stub.csproj.GenerateResource.cache
+D:\Code\project\Crytper\Crypter\Stub\obj\Debug\Stub.csproj.CoreCompileInputs.cache
+D:\Code\project\Crytper\Crypter\Stub\obj\Debug\Stub.exe
+D:\Code\project\Crytper\Crypter\Stub\obj\Debug\Stub.pdb
