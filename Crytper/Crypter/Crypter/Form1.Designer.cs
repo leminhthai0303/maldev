@@ -112,12 +112,13 @@
             // btnBuild
             // 
             this.btnBuild.AccessibleName = "";
-            this.btnBuild.Location = new System.Drawing.Point(552, 73);
+            this.btnBuild.Location = new System.Drawing.Point(570, 157);
             this.btnBuild.Name = "btnBuild";
             this.btnBuild.Size = new System.Drawing.Size(148, 137);
             this.btnBuild.TabIndex = 1;
             this.btnBuild.Text = "Build";
             this.btnBuild.UseVisualStyleBackColor = true;
+            this.btnBuild.Click += new System.EventHandler(this.btnBuild_Click);
             // 
             // labelServer
             // 
