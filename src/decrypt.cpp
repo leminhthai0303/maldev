@@ -14,7 +14,7 @@ public:
     }
 
     void readPrivateKeyFromFile() {
-        std::ifstream privateKeyFile("file.private.txt");
+        std::ifstream privateKeyFile("private.txt");
         if (privateKeyFile.is_open()) {
             privateKeyFile >> private_key;
             privateKeyFile >> n;
