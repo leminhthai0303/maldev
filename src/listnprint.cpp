@@ -40,15 +40,3 @@ void print(const std::vector<FileItem>& items, const std::string& prefix, const 
         }
     }
 }
-
-int main() {
-    std::string path = "C:\\"; // Path to C drive
-
-    // Get a list of files and directories from the path
-    std::vector<FileItem> filesAndDirs = listFilesAndDirectories(path);
-
-    // Print out files and directories
-    print(filesAndDirs, "", path);
-
-    return 0;
-}
