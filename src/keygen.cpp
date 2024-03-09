@@ -1,10 +1,11 @@
+#include <bits/stdc++.h>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <set>
 #include <numeric>
-#include <fstream> // For file operations
-#include <random>  // For random number generation
+#include <fstream>
+#include <random>
 
 std::set<int> prime;
 int public_key;
@@ -47,7 +48,9 @@ void setkeys() {
         publicFileCheck.close();
         return;
     }
-    
+
+    primefiller();
+
     int prime1 = pickrandomprime();
     int prime2 = pickrandomprime();
     n = prime1 * prime2;
@@ -82,3 +85,7 @@ void setkeys() {
         privateKeyFile.close();
     }
 }
+
+// int main (){
+//     setkeys();
+// }
