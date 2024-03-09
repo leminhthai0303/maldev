@@ -39,3 +39,16 @@ public:
         return s;
     }
 };
+
+// int main() {
+//     Decrypt decryptor;
+
+//     decryptor.readPrivateKeyFromFile();
+
+//     std::vector<int> encoded_message = {693, 101, 612, 200, 39, 287, 101, 612, 612, 685, 229, 101};
+
+//     std::string decoded_message = decryptor.decode(encoded_message);
+//     std::cout << "Decoded message: " << decoded_message << std::endl;
+
+//     return 0;
+// }
