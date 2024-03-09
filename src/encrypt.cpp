@@ -50,7 +50,7 @@ public:
 //     std::vector<int> encoded_message = encryptor.encode(message);
 
 // 	for (auto& p : encoded_message)
-// 		std::cout << p;
+// 		std::cout << p << " ";
 //     std::cout << std::endl;
 
 //     return 0;
