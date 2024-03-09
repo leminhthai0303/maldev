@@ -39,3 +39,19 @@ public:
         return form;
     }
 };
+
+// int main() {
+//     Encrypt encryptor;
+
+//     std::string message = "Test Message";
+
+//     encryptor.readPublicKeyFromFile();
+
+//     std::vector<int> encoded_message = encryptor.encode(message);
+
+// 	for (auto& p : encoded_message)
+// 		std::cout << p;
+//     std::cout << std::endl;
+
+//     return 0;
+// }
