@@ -40,6 +40,14 @@ int pickrandomprime() {
 }
 
 void setkeys() {
+    // Check if public.txt already exists
+    std::ifstream publicFileCheck("public.txt");
+    if (publicFileCheck) {
+        // File exists, so no need to generate keys
+        publicFileCheck.close();
+        return;
+    }
+    
     int prime1 = pickrandomprime();
     int prime2 = pickrandomprime();
     n = prime1 * prime2;
