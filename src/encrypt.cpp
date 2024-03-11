@@ -1,57 +1,24 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
+#include <cmath>
 #include <string>
 
-class Encrypt {
-private:
-    int public_key;
-    int n;
+void encrypt(const std::string& path, int& e, int& n) {
+    std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
 
-public:
-    Encrypt() {
-        readPublicKeyFromFile();
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << path << std::endl;
+        return;
     }
 
-    void readPublicKeyFromFile() {
-        std::ifstream publicKeyFile("public.txt");
-        if (publicKeyFile.is_open()) {
-            publicKeyFile >> public_key;
-            publicKeyFile >> n;
-            publicKeyFile.close();
-        }
+    char byte;
+    while (file.read(&byte, 1)) {
+        char text = static_cast<int>(static_cast<unsigned char>(byte));
+        char cipher = static_cast<char>(static_cast<int>(std::fmod(std::pow(text, e), n)));
+
+        file.seekp(-1, std::ios::cur);
+        file.put(cipher);
     }
 
-    long long int encrypt(double message) {
-        int e = public_key;
-        long long int encrypted_text = 1;
-        while (e--) {
-            encrypted_text *= message;
-            encrypted_text %= n;
-        }
-        return encrypted_text;
-    }
-
-    std::vector<int> encode(std::string message) {
-        std::vector<int> form;
-        for (auto& letter : message)
-            form.push_back(encrypt((int)letter));
-        return form;
-    }
-};
-
-// int main() {
-//     Encrypt encryptor;
-
-//     std::string message = "Test Message";
-
-//     encryptor.readPublicKeyFromFile();
-
-//     std::vector<int> encoded_message = encryptor.encode(message);
-
-// 	for (auto& p : encoded_message)
-// 		std::cout << p << " ";
-//     std::cout << std::endl;
-
-//     return 0;
-// }
+    file.close();
+}

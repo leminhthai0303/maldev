@@ -1,54 +1,24 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
+#include <cmath>
 #include <string>
 
-class Decrypt {
-private:
-    int private_key;
-    int n;
+void encrypt(const std::string& path, int& d, int& n) {
+    std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
 
-public:
-    Decrypt() {
-        readPrivateKeyFromFile();
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << path << std::endl;
+        return;
     }
 
-    void readPrivateKeyFromFile() {
-        std::ifstream privateKeyFile("private.txt");
-        if (privateKeyFile.is_open()) {
-            privateKeyFile >> private_key;
-            privateKeyFile >> n;
-            privateKeyFile.close();
-        }
+    char byte;
+    while (file.read(&byte, 1)) {
+        char text = static_cast<int>(static_cast<unsigned char>(byte));
+        char cipher = static_cast<char>(static_cast<int>(std::fmod(std::pow(text, d), n)));
+        
+        file.seekp(-1, std::ios::cur);
+        file.put(cipher);
     }
 
-    long long int decrypt(int encrypted_text) {
-        int d = private_key;
-        long long int decrypted = 1;
-        while (d--) {
-            decrypted *= encrypted_text;
-            decrypted %= n;
-        }
-        return decrypted;
-    }
-
-    std::string decode(std::vector<int> encoded) {
-        std::string s;
-        for (auto& num : encoded)
-            s += decrypt(num);
-        return s;
-    }
-};
-
-// int main() {
-//     Decrypt decryptor;
-
-//     decryptor.readPrivateKeyFromFile();
-
-//     std::vector<int> encoded_message = {693, 101, 612, 200, 39, 287, 101, 612, 612, 685, 229, 101};
-
-//     std::string decoded_message = decryptor.decode(encoded_message);
-//     std::cout << "Decoded message: " << decoded_message << std::endl;
-
-//     return 0;
-// }
+    file.close();
+}
