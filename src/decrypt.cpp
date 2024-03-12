@@ -1,54 +1,50 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
+#include <cmath>
 #include <string>
 
-class Decrypt {
-private:
-    int private_key;
-    int n;
+// Hàm tính lũy thừa modul hiệu quả
+long long modPow1(long long base, int exp, int modulus) {
+    long long result = 1;
+    base = base % modulus;
+    while (exp > 0) {
+        if (exp % 2 == 1)
+            result = (result * base) % modulus;
+        exp = exp >> 1;
+        base = (base * base) % modulus;
+    }
+    return result;
+}
 
-public:
-    Decrypt() {
-        readPrivateKeyFromFile();
+void decrypt(const std::string& path, int& d, int& n) {
+    std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << path << std::endl;
+        return;
     }
 
-    void readPrivateKeyFromFile() {
-        std::ifstream privateKeyFile("private.txt");
-        if (privateKeyFile.is_open()) {
-            privateKeyFile >> private_key;
-            privateKeyFile >> n;
-            privateKeyFile.close();
-        }
+    char byte;
+    while (file.read(&byte, 1)) {
+        unsigned char cipher = static_cast<unsigned char>(byte);
+        unsigned char text = static_cast<unsigned char>(modPow1(cipher, d, n));
+        file.seekp(-1, std::ios::cur);
+        file.put(text);
     }
 
-    long long int decrypt(int encrypted_text) {
-        int d = private_key;
-        long long int decrypted = 1;
-        while (d--) {
-            decrypted *= encrypted_text;
-            decrypted %= n;
-        }
-        return decrypted;
-    }
-
-    std::string decode(std::vector<int> encoded) {
-        std::string s;
-        for (auto& num : encoded)
-            s += decrypt(num);
-        return s;
-    }
-};
+    file.close();
+}
 
 // int main() {
-//     Decrypt decryptor;
+//     std::string filePath = "C:\\test\\test.bat";
+//     int d, n;
 
-//     decryptor.readPrivateKeyFromFile();
+//     d = 411;
+//     n = 667;
 
-//     std::vector<int> encoded_message = {693, 101, 612, 200, 39, 287, 101, 612, 612, 685, 229, 101};
+//     decrypt(filePath, d, n);
 
-//     std::string decoded_message = decryptor.decode(encoded_message);
-//     std::cout << "Decoded message: " << decoded_message << std::endl;
+//     std::cout << "Decryption completed." << std::endl;
 
 //     return 0;
 // }
