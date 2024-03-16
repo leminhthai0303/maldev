@@ -41,7 +41,6 @@ namespace RunPE
 
     */
 
-
     public static class RunPE
     {
 
@@ -182,7 +181,6 @@ namespace RunPE
             }
         }
     }
-
 }
 
 namespace Encryption

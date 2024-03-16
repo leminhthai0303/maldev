@@ -1,0 +1,89 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{FB9D160A-DD01-4AA7-BFA7-26F4038E5492}|Stub\\Stub.csproj|d:\\code\\prj1\\maldev\\crytper\\crypter\\stub\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FB9D160A-DD01-4AA7-BFA7-26F4038E5492}|Stub\\Stub.csproj|solutionrelative:stub\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B1760DBD-0870-4EFA-8294-4520572BC0D6}|Crypter\\Crypter.csproj|D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\crypter\\tools\\compiler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B1760DBD-0870-4EFA-8294-4520572BC0D6}|Crypter\\Crypter.csproj|solutionrelative:crypter\\tools\\compiler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B1760DBD-0870-4EFA-8294-4520572BC0D6}|Crypter\\Crypter.csproj|D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\crypter\\properties\\app.manifest||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{B1760DBD-0870-4EFA-8294-4520572BC0D6}|Crypter\\Crypter.csproj|solutionrelative:crypter\\properties\\app.manifest||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B1760DBD-0870-4EFA-8294-4520572BC0D6}|Crypter\\Crypter.csproj|D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\crypter\\resources\\stub.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{B1760DBD-0870-4EFA-8294-4520572BC0D6}|Crypter\\Crypter.csproj|solutionrelative:crypter\\resources\\stub.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Compiler.cs",
+              "DocumentMoniker": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Crypter\\Tools\\Compiler.cs",
+              "RelativeDocumentMoniker": "Crypter\\Tools\\Compiler.cs",
+              "ToolTip": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Crypter\\Tools\\Compiler.cs",
+              "RelativeToolTip": "Crypter\\Tools\\Compiler.cs",
+              "ViewState": "AQIAAD4AAAAAAAAAAAAgwEQAAAASAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-03-16T14:16:59.16Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "app.manifest",
+              "DocumentMoniker": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Crypter\\Properties\\app.manifest",
+              "RelativeDocumentMoniker": "Crypter\\Properties\\app.manifest",
+              "ToolTip": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Crypter\\Properties\\app.manifest",
+              "RelativeToolTip": "Crypter\\Properties\\app.manifest",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABAAAAAaAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001203|",
+              "WhenOpened": "2024-03-16T14:14:44.411Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Stub.txt",
+              "DocumentMoniker": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Crypter\\Resources\\Stub.txt",
+              "RelativeDocumentMoniker": "Crypter\\Resources\\Stub.txt",
+              "ToolTip": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Crypter\\Resources\\Stub.txt",
+              "RelativeToolTip": "Crypter\\Resources\\Stub.txt",
+              "ViewState": "AQIAAMEAAAAAAAAAAAAcwNoAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2024-03-16T13:55:01.869Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Stub\\Program.cs",
+              "RelativeDocumentMoniker": "Stub\\Program.cs",
+              "ToolTip": "D:\\Code\\prj1\\maldev\\Crytper\\Crypter\\Stub\\Program.cs",
+              "RelativeToolTip": "Stub\\Program.cs",
+              "ViewState": "AQIAABIAAAAAAAAAAAAWwCQAAAAkAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-03-16T13:54:22.243Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

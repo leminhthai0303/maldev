@@ -8,3 +8,13 @@ D:\Code\project\Crytper\Crypter\Crypter\obj\Debug\Crypter.csproj.GenerateResourc
 D:\Code\project\Crytper\Crypter\Crypter\obj\Debug\Crypter.csproj.CoreCompileInputs.cache
 D:\Code\project\Crytper\Crypter\Crypter\obj\Debug\Crypter.exe
 D:\Code\project\Crytper\Crypter\Crypter\obj\Debug\Crypter.pdb
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\bin\Debug\Crypter.exe.config
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\bin\Debug\Crypter.exe
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\bin\Debug\Crypter.pdb
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\obj\Debug\Crypter.csproj.AssemblyReference.cache
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\obj\Debug\Crypter.Form1.resources
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\obj\Debug\Crypter.Properties.Resources.resources
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\obj\Debug\Crypter.csproj.GenerateResource.cache
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\obj\Debug\Crypter.csproj.CoreCompileInputs.cache
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\obj\Debug\Crypter.exe
+D:\Code\prj1\maldev\Crytper\Crypter\Crypter\obj\Debug\Crypter.pdb
