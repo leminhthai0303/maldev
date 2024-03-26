@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <random>
+#include <iomanip>
 
 // AES S-Box
 const unsigned char sbox[256] = {
@@ -196,27 +197,14 @@ void AddRoundKey(unsigned char *state, const unsigned char *roundKey)
     }
 }
 
-// Khởi tạo IV ngẫu nhiên
-void GenerateIV(unsigned char *iv)
-{
+void GenerateRandomByte(unsigned char *key, unsigned char *iv, int size) {
     std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(0, 255);
-    for (int i = 0; i < 16; ++i)
-    {
-        iv[i] = dis(gen);
-    }
-}
+    std::mt19937 gen(rd()); // Initialize the random number generator with random device
 
-// Khởi tạo khóa ngẫu nhiên
-void GenerateKey(unsigned char *key)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(0, 15);
-    for (int i = 0; i < 16; ++i)
-    {
-        key[i] = dis(gen);
+    for (int i = 0; i < size; ++i) { // Generate 'size' bytes for both key and IV
+        std::uniform_int_distribution<int> dis(0, 255); // Define the range from 0 to 255
+        key[i] = static_cast<unsigned char>(dis(gen)); // Generate a random byte for the key
+        iv[i] = static_cast<unsigned char>(dis(gen));  // Generate a random byte for the IV
     }
 }
 
@@ -268,35 +256,49 @@ void AESEncryptCBC(const unsigned char *input, unsigned char *output, const unsi
     }
 }
 
-int main()
-{
-    unsigned char plaintext[16] = "hello world!!!";
-    unsigned char key[16];
-    GenerateKey(key);
+void saveKeyAndIV(unsigned char &key, unsigned char &IV) {
+    
+}
+
+void printKeyAndIV(unsigned char *key, unsigned char *iv, int keySize, int ivSize) {
     std::cout << "key: ";
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < keySize; ++i)
     {
         std::cout << std::hex << (int)key[i];
     }
     std::cout << std::endl;
-    unsigned char iv[16];
-    GenerateIV(iv);
-    std::cout << "iv: ";
-    for (int i = 0; i < 16; ++i)
+
+    std::cout << "iv:  ";
+    for (int i = 0; i < ivSize; ++i)
     {
         std::cout << std::hex << (int)iv[i];
     }
     std::cout << std::endl;
-    unsigned char ciphertext[16];
+}
 
-    AESEncryptCBC(plaintext, ciphertext, key, iv);
+int main()
+{
+    // Generate key
+    const int KEY_SIZE = 16;
+    unsigned char key[KEY_SIZE];
+    
+    // Generate IV
+    const int IV_SIZE = 16;
+    unsigned char iv[IV_SIZE];
+    GenerateRandomByte(key, iv, 16);
+    
+    printKeyAndIV(key, iv, KEY_SIZE, IV_SIZE);
+    
 
-    std::cout << "Cipher text: ";
-    for (int i = 0; i < 16; ++i)
-    {
-        std::cout << std::hex << (int)ciphertext[i];
-    }
-    std::cout << std::endl;
-
-    return 0;
+//  unsigned char ciphertext[16];
+//    AESEncryptCBC(plaintext, ciphertext, key, iv);
+//
+//    std::cout << "Cipher text: ";
+//    for (int i = 0; i < 16; ++i)
+//    {
+//        std::cout << std::hex << (int)ciphertext[i];
+//    }
+//    std::cout << std::endl;
+//
+//    return 0;
 }
