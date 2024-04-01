@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <random>
+#include <cstring>
 
 // AES S-Box
 const unsigned char sbox[256] = {
@@ -46,6 +47,30 @@ const unsigned char inv_sbox[256] = {
 const unsigned char Rcon[10] = {
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
 
+// Khởi tạo IV ngẫu nhiên
+void GenerateIV(unsigned char *iv)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis(0, 15);
+    for (int i = 0; i < 16; ++i)
+    {
+        iv[i] = static_cast<unsigned char>(dis(gen));
+    }
+}
+
+// Khởi tạo khóa ngẫu nhiên
+void GenerateKey(unsigned char *key)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis(0, 15);
+    for (int i = 0; i < 16; ++i)
+    {
+        key[i] = static_cast<unsigned char>(dis(gen));
+    }
+}
+
 // Hàm nhân 2 trong trường Galois
 unsigned char mul2(unsigned char val)
 {
@@ -63,6 +88,30 @@ unsigned char mul2(unsigned char val)
 unsigned char mul3(unsigned char val)
 {
     return mul2(val) ^ val;
+}
+
+// Hàm nhân 9 trong trường Galois
+unsigned char mul9(unsigned char val)
+{
+    return mul2(mul2(mul2(val))) ^ val;
+}
+
+// Hàm nhân 11 trong trường Galois
+unsigned char mul11(unsigned char val)
+{
+    return mul2(mul2(mul2(val)) ^ val) ^ val;
+}
+
+// Hàm nhân 13 trong trường Galois
+unsigned char mul13(unsigned char val)
+{
+    return mul2(mul2(mul2(val)) ^ mul2(val)) ^ val;
+}
+
+// Hàm nhân 14 trong trường Galois
+unsigned char mul14(unsigned char val)
+{
+    return mul2(mul2(mul2(val)) ^ mul2(val) ^ val);
 }
 
 // Key Expansion
@@ -196,57 +245,28 @@ void AddRoundKey(unsigned char *state, const unsigned char *roundKey)
     }
 }
 
-// Khởi tạo IV ngẫu nhiên
-void GenerateIV(unsigned char *iv)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(0, 255);
-    for (int i = 0; i < 16; ++i)
-    {
-        iv[i] = dis(gen);
-    }
-}
-
-// Khởi tạo khóa ngẫu nhiên
-void GenerateKey(unsigned char *key)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(0, 15);
-    for (int i = 0; i < 16; ++i)
-    {
-        key[i] = dis(gen);
-    }
-}
-
-// AES Encryption với IV và khóa ngẫu nhiên
-void AESEncryptCBC(const unsigned char *input, unsigned char *output, const unsigned char *key, const unsigned char *iv)
+void AESEncryptCBC(const unsigned char *plaintext, unsigned char *ciphertext, const unsigned char *key, const unsigned char *iv)
 {
     unsigned char state[16];
-    unsigned char prevBlock[16];
-
-    for (int i = 0; i < 16; ++i)
-    {
-        state[i] = input[i] ^ iv[i]; // XOR với IV
-    }
-
     unsigned char roundKeys[176];
+
+    // Khởi tạo round keys từ khóa
     KeyExpansion(key, roundKeys);
 
-    for (int i = 0; i < 16; ++i)
-    {
-        prevBlock[i] = iv[i]; // Lưu lại block trước đó
-    }
+    // Đặt IV cho block đầu tiên
+    std::memcpy(state, iv, 16);
 
-    for (int block = 0; block < 16; block += 16)
+    // Mã hóa từng block của plaintext
+    for (size_t i = 0; i < strlen((const char *)plaintext); i += 16)
     {
-        for (int i = 0; i < 16; ++i)
+        // XOR với block trước đó hoặc IV
+        for (int j = 0; j < 16; ++j)
         {
-            state[i] ^= prevBlock[i]; // XOR với block trước đó hoặc IV
+            state[j] ^= plaintext[i + j];
         }
 
-        AddRoundKey(state, roundKeys);
+        // Thực hiện AES encryption trên block hiện tại
+        AddRoundKey(state, key);
 
         for (int round = 1; round < 10; ++round)
         {
@@ -258,14 +278,77 @@ void AESEncryptCBC(const unsigned char *input, unsigned char *output, const unsi
 
         SubBytes(state);
         ShiftRows(state);
-        AddRoundKey(state, roundKeys + 160);
+        AddRoundKey(state, roundKeys + 160); // Round 10
 
-        for (int i = 0; i < 16; ++i)
-        {
-            output[block + i] = state[i];
-            prevBlock[i] = state[i]; // Lưu lại block hiện tại cho việc XOR với block tiếp theo
-        }
+        // Sao chép ciphertext vào buffer
+        std::memcpy(ciphertext + i, state, 16);
     }
+}
+
+
+//Hàm ngược dùng để decrypt
+// Hàm dịch các hàng ngược lại
+void InvShiftRows(unsigned char *state)
+{
+    unsigned char tmp[16];
+    for (int i = 0; i < 16; ++i)
+    {
+        tmp[i] = state[i];
+    }
+
+    state[1] = tmp[13];
+    state[5] = tmp[9];
+    state[9] = tmp[5];
+    state[13] = tmp[1];
+
+    state[2] = tmp[10];
+    state[6] = tmp[14];
+    state[10] = tmp[2];
+    state[14] = tmp[6];
+
+    state[3] = tmp[7];
+    state[7] = tmp[11];
+    state[11] = tmp[15];
+    state[15] = tmp[3];
+}
+
+// Hàm thực hiện pha giải mã SubBytes
+void InvSubBytes(unsigned char *state)
+{
+    for (int i = 0; i < 16; ++i)
+    {
+        state[i] = inv_sbox[state[i]];
+    }
+}
+
+// Hàm thực hiện pha giải mã MixColumns
+void InvMixColumns(unsigned char *state)
+{
+    unsigned char tmp[16];
+    for (int i = 0; i < 16; ++i)
+    {
+        tmp[i] = state[i];
+    }
+
+    state[0] = (unsigned char)(mul14(tmp[0]) ^ mul11(tmp[1]) ^ mul13(tmp[2]) ^ mul9(tmp[3]));
+    state[1] = (unsigned char)(mul9(tmp[0]) ^ mul14(tmp[1]) ^ mul11(tmp[2]) ^ mul13(tmp[3]));
+    state[2] = (unsigned char)(mul13(tmp[0]) ^ mul9(tmp[1]) ^ mul14(tmp[2]) ^ mul11(tmp[3]));
+    state[3] = (unsigned char)(mul11(tmp[0]) ^ mul13(tmp[1]) ^ mul9(tmp[2]) ^ mul14(tmp[3]));
+
+    state[4] = (unsigned char)(mul14(tmp[4]) ^ mul11(tmp[5]) ^ mul13(tmp[6]) ^ mul9(tmp[7]));
+    state[5] = (unsigned char)(mul9(tmp[4]) ^ mul14(tmp[5]) ^ mul11(tmp[6]) ^ mul13(tmp[7]));
+    state[6] = (unsigned char)(mul13(tmp[4]) ^ mul9(tmp[5]) ^ mul14(tmp[6]) ^ mul11(tmp[7]));
+    state[7] = (unsigned char)(mul11(tmp[4]) ^ mul13(tmp[5]) ^ mul9(tmp[6]) ^ mul14(tmp[7]));
+
+    state[8] = (unsigned char)(mul14(tmp[8]) ^ mul11(tmp[9]) ^ mul13(tmp[10]) ^ mul9(tmp[11]));
+    state[9] = (unsigned char)(mul9(tmp[8]) ^ mul14(tmp[9]) ^ mul11(tmp[10]) ^ mul13(tmp[11]));
+    state[10] = (unsigned char)(mul13(tmp[8]) ^ mul9(tmp[9]) ^ mul14(tmp[10]) ^ mul11(tmp[11]));
+    state[11] = (unsigned char)(mul11(tmp[8]) ^ mul13(tmp[9]) ^ mul9(tmp[10]) ^ mul14(tmp[11]));
+
+    state[12] = (unsigned char)(mul14(tmp[12]) ^ mul11(tmp[13]) ^ mul13(tmp[14]) ^ mul9(tmp[15]));
+    state[13] = (unsigned char)(mul9(tmp[12]) ^ mul14(tmp[13]) ^ mul11(tmp[14]) ^ mul13(tmp[15]));
+    state[14] = (unsigned char)(mul13(tmp[12]) ^ mul9(tmp[13]) ^ mul14(tmp[14]) ^ mul11(tmp[15]));
+    state[15] = (unsigned char)(mul11(tmp[12]) ^ mul13(tmp[13]) ^ mul9(tmp[14]) ^ mul14(tmp[15]));
 }
 
 int main()

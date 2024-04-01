@@ -1,1 +1,0 @@
-Ai muốn test để chắc ăn thì test trên máy ảo, lưu ý tạo 1 folder test ở ổ C để sử dụng, hoặc có thể tự thay đổi đường dẫn đến nơi muốn test
