@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 #include "../include/rsa.h"
+=======
+>>>>>>> 8dd77fc8f4ea5398280231f502f5e9233bf44cd9
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <filesystem>
 #include <cmath>
+<<<<<<< HEAD
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -33,4 +37,24 @@ int main() {
     int e, d, n;
     keyGen(e, d, n);
     cout << e << " " << d << " " << n << endl;
+=======
+#include "listnprint.cpp"
+
+int main() {
+    srand(time(NULL));
+    
+    RSA::primefiller();
+    RSA::setkeys();
+    
+    std::string path = "C:\\test\\";
+    std::vector<FileItem> filesAndDirs = listFilesAndDirectories(path);
+
+    // readPublicKeyFromFile();
+    // encoder(filesAndDirs, path);
+
+    // readPrivateKeyFromFile();
+    // decoder(filesAndDirs, path);
+
+    return 0;
+>>>>>>> 8dd77fc8f4ea5398280231f502f5e9233bf44cd9
 }
