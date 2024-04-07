@@ -2,6 +2,8 @@
 #include <vector>
 #include <random>
 #include <iomanip>
+#include <fstream>
+#include <string>
 
 // AES S-Box
 const unsigned char sbox[256] = {
@@ -199,12 +201,12 @@ void AddRoundKey(unsigned char *state, const unsigned char *roundKey)
 
 void GenerateRandomByte(unsigned char *key, unsigned char *iv, int size) {
     std::random_device rd;
-    std::mt19937 gen(rd()); // Initialize the random number generator with random device
+    std::mt19937 gen(rd());
 
-    for (int i = 0; i < size; ++i) { // Generate 'size' bytes for both key and IV
-        std::uniform_int_distribution<int> dis(0, 255); // Define the range from 0 to 255
-        key[i] = static_cast<unsigned char>(dis(gen)); // Generate a random byte for the key
-        iv[i] = static_cast<unsigned char>(dis(gen));  // Generate a random byte for the IV
+    for (int i = 0; i < size; i++) {
+        std::uniform_int_distribution<int> dis(0, 15); 
+        key[i] = static_cast<unsigned char>(dis(gen)); 
+        iv[i] = static_cast<unsigned char>(dis(gen)); 
     }
 }
 
@@ -256,20 +258,51 @@ void AESEncryptCBC(const unsigned char *input, unsigned char *output, const unsi
     }
 }
 
-void saveKeyAndIV(unsigned char &key, unsigned char &IV) {
-    
+void keyAndIvToFile(unsigned char *key, unsigned char *iv, int size) {
+    std::ofstream secret;
+    secret.open("key.txt");
+
+    if (secret.is_open()) {
+        // KEY to file
+        for (int i = 0; i < size; i++) {
+            secret << std::hex << (int)key[i];
+        }
+
+        secret << std::endl; //seperator between key and iv
+
+        // IV to file
+        for (int i = 0; i < size; i++) {
+            secret << std::hex << (int)iv[i];
+        }
+    }
+    secret.close();
 }
 
-void printKeyAndIV(unsigned char *key, unsigned char *iv, int keySize, int ivSize) {
+void readKeyAndIV() {
+    std::ifstream secret;
+    std::string line;
+
+    // Read Key and IV from file created from keyAndIvToFile()
+    secret.open("key.txt", std::ios::out);
+    if (secret.is_open()) {
+        while (std::getline(secret, line)) {
+            std::cout << line << std::endl;
+        }
+        secret.close();
+    }
+}
+
+/* CHỈ DÙNG CHO TESTING, XOÁ NGAY KHI XONG PROJECT */
+void printKeyAndIV(unsigned char *key, unsigned char *iv, int size) { 
     std::cout << "key: ";
-    for (int i = 0; i < keySize; ++i)
+    for (int i = 0; i < size; i++)
     {
         std::cout << std::hex << (int)key[i];
     }
     std::cout << std::endl;
 
     std::cout << "iv:  ";
-    for (int i = 0; i < ivSize; ++i)
+    for (int i = 0; i < size; i++)
     {
         std::cout << std::hex << (int)iv[i];
     }
@@ -279,15 +312,17 @@ void printKeyAndIV(unsigned char *key, unsigned char *iv, int keySize, int ivSiz
 int main()
 {
     // Generate key
-    const int KEY_SIZE = 16;
-    unsigned char key[KEY_SIZE];
+    const int size = 16;
+    unsigned char key[size];
     
     // Generate IV
-    const int IV_SIZE = 16;
-    unsigned char iv[IV_SIZE];
-    GenerateRandomByte(key, iv, 16);
+    unsigned char iv[size];
+    GenerateRandomByte(key, iv, size);
     
-    printKeyAndIV(key, iv, KEY_SIZE, IV_SIZE);
+    keyAndIvToFile(key, iv, size);
+    readKeyAndIV();
+
+    //printKeyAndIV(key, iv, size);
     
 
 //  unsigned char ciphertext[16];
