@@ -4,6 +4,13 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
+#include <cstring>
+#include <sstream>
+
+struct KeyAndIV {
+    std::vector<unsigned char> key;
+    std::vector<unsigned char> iv;
+};
 
 // AES S-Box
 const unsigned char sbox[256] = {
@@ -199,68 +206,168 @@ void AddRoundKey(unsigned char *state, const unsigned char *roundKey)
     }
 }
 
-void GenerateRandomByte(unsigned char *key, unsigned char *iv, int size) {
+KeyAndIV generateKeyAndIV(int key_size, int iv_size) {
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(rd()); 
 
-    for (int i = 0; i < size; i++) {
-        std::uniform_int_distribution<int> dis(0, 15); 
-        key[i] = static_cast<unsigned char>(dis(gen)); 
-        iv[i] = static_cast<unsigned char>(dis(gen)); 
+    std::uniform_int_distribution<> dis(0, 255);
+
+    std::vector<unsigned char> key(key_size);
+    for (int i = 0; i < key_size; ++i) {
+        key[i] = static_cast<unsigned char>(dis(gen));
     }
+
+    // Generate random IV
+    std::vector<unsigned char> iv(iv_size);
+    for (int i = 0; i < iv_size; ++i) {
+        iv[i] = static_cast<unsigned char>(dis(gen));
+    }
+
+    return {key, iv};
 }
 
 // AES Encryption với IV và khóa ngẫu nhiên
-void AESEncryptCBC(const unsigned char *input, unsigned char *output, const unsigned char *key, const unsigned char *iv)
+void AESEncryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, const unsigned char *key, const unsigned char *iv)
 {
+    std::ifstream inputFile(inputFilePath, std::ios::binary);
+    if (!inputFile.is_open()) {
+        std::cerr << "Error opening input file: " << inputFilePath << std::endl;
+        return;
+    }
+
+    std::ofstream outputFile(outputFilePath, std::ios::binary);
+    if (!outputFile.is_open()) {
+        std::cerr << "Error opening output file: " << outputFilePath << std::endl;
+        inputFile.close(); // Close input file before returning
+        return;
+    }
+
     unsigned char state[16];
     unsigned char prevBlock[16];
 
-    for (int i = 0; i < 16; ++i)
-    {
-        state[i] = input[i] ^ iv[i]; // XOR với IV
-    }
-
     unsigned char roundKeys[176];
-    KeyExpansion(key, roundKeys);
+    KeyExpansion(key, roundKeys); // Assuming KeyExpansion correctly generates round keys
 
+    // Copy IV to previous block
     for (int i = 0; i < 16; ++i)
     {
-        prevBlock[i] = iv[i]; // Lưu lại block trước đó
+        prevBlock[i] = iv[i];
     }
 
-    for (int block = 0; block < 16; block += 16)
-    {
+    int blockCount = 0;
+    while (!inputFile.eof()) {
+        inputFile.read(reinterpret_cast<char*>(state), 16); // Read 16 bytes (1 block) from input file
+
+        // XOR input block with previous ciphertext block or IV
         for (int i = 0; i < 16; ++i)
         {
-            state[i] ^= prevBlock[i]; // XOR với block trước đó hoặc IV
+            state[i] ^= prevBlock[i];
         }
 
-        AddRoundKey(state, roundKeys);
-
-        for (int round = 1; round < 10; ++round)
+        // AES encryption rounds
+        for (int round = 0; round < 10; ++round)
         {
+            AddRoundKey(state, roundKeys + round * 16);
             SubBytes(state);
             ShiftRows(state);
             MixColumns(state);
-            AddRoundKey(state, roundKeys + round * 16);
         }
 
-        SubBytes(state);
-        ShiftRows(state);
+        // Final round without MixColumns
         AddRoundKey(state, roundKeys + 160);
 
+        // Write encrypted block to output file
+        outputFile.write(reinterpret_cast<const char*>(state), 16);
+
+        // Update previous block with the encrypted block
         for (int i = 0; i < 16; ++i)
         {
-            output[block + i] = state[i];
-            prevBlock[i] = state[i]; // Lưu lại block hiện tại cho việc XOR với block tiếp theo
+            prevBlock[i] = state[i];
         }
+
+        ++blockCount;
     }
+
+    inputFile.close();
+    outputFile.close();
+
+    std::cout << "Encryption completed successfully. Encrypted " << blockCount << " blocks." << std::endl;
+}
+
+void AESDecryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, const unsigned char *key, const unsigned char *iv)
+{
+    std::ifstream inputFile(inputFilePath, std::ios::binary);
+    if (!inputFile.is_open()) {
+        std::cerr << "Error opening input file: " << inputFilePath << std::endl;
+        return;
+    }
+
+    std::ofstream outputFile(outputFilePath, std::ios::binary);
+    if (!outputFile.is_open()) {
+        std::cerr << "Error opening output file: " << outputFilePath << std::endl;
+        inputFile.close(); // Close input file before returning
+        return;
+    }
+
+    unsigned char state[16];
+    unsigned char prevBlock[16];
+
+    unsigned char roundKeys[176];
+    KeyExpansion(key, roundKeys); // Assuming KeyExpansion correctly generates round keys
+
+    // Copy IV to previous block
+    for (int i = 0; i < 16; ++i)
+    {
+        prevBlock[i] = iv[i];
+    }
+
+    int blockCount = 0;
+    while (!inputFile.eof()) {
+        inputFile.read(reinterpret_cast<char*>(state), 16); // Read 16 bytes (1 block) from input file
+
+        unsigned char prevState[16];
+        std::memcpy(prevState, state, 16); // Save state for XORing with IV or previous ciphertext
+
+        // AES decryption rounds
+        ShiftRows(state);
+        SubBytes(state);
+        AddRoundKey(state, roundKeys + 160);
+
+        for (int round = 9; round > 0; --round)
+        {
+            MixColumns(state);
+            AddRoundKey(state, roundKeys + round * 16);
+            ShiftRows(state);
+            SubBytes(state);
+        }
+
+        // Final round without InvMixColumns
+        AddRoundKey(state, roundKeys);
+
+        // XOR with IV or previous ciphertext to get plaintext block
+        for (int i = 0; i < 16; ++i)
+        {
+            state[i] ^= prevBlock[i];
+        }
+
+        // Write plaintext block to output file
+        outputFile.write(reinterpret_cast<const char*>(state), 16);
+
+        // Update previous block with the decrypted block
+        std::memcpy(prevBlock, prevState, 16);
+
+        ++blockCount;
+    }
+
+    inputFile.close();
+    outputFile.close();
+
+    std::cout << "Decryption completed successfully. Decrypted " << blockCount << " blocks." << std::endl;
 }
 
 void keyAndIvToFile(unsigned char *key, unsigned char *iv, int size) {
     std::ofstream secret;
-    secret.open("key.txt");
+    secret.open("key");
 
     if (secret.is_open()) {
         // KEY to file
@@ -276,20 +383,6 @@ void keyAndIvToFile(unsigned char *key, unsigned char *iv, int size) {
         }
     }
     secret.close();
-}
-
-void readKeyAndIV() {
-    std::ifstream secret;
-    std::string line;
-
-    // Read Key and IV from file created from keyAndIvToFile()
-    secret.open("key.txt", std::ios::out);
-    if (secret.is_open()) {
-        while (std::getline(secret, line)) {
-            std::cout << line << std::endl;
-        }
-        secret.close();
-    }
 }
 
 /* CHỈ DÙNG CHO TESTING, XOÁ NGAY KHI XONG PROJECT */
@@ -309,18 +402,37 @@ void printKeyAndIV(unsigned char *key, unsigned char *iv, int size) {
     std::cout << std::endl;
 }
 
+std::string bytesToHex(const std::vector<unsigned char>& bytes) {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (unsigned char byte : bytes) {
+        ss << std::setw(2) << static_cast<int>(byte);
+    }
+    return ss.str();
+}
+
 int main()
 {
-    // Generate key
     const int size = 16;
-    unsigned char key[size];
     
-    // Generate IV
-    unsigned char iv[size];
-    GenerateRandomByte(key, iv, size);
-    
-    keyAndIvToFile(key, iv, size);
-    readKeyAndIV();
+    KeyAndIV GenKeyAndIV = generateKeyAndIV(size, size);
+
+std::cout << "Key: ";
+    for (unsigned char byte : GenKeyAndIV.key) {
+        std::cout << static_cast<int>(byte) << " "; 
+    }
+    std::cout << std::endl;
+
+    std::cout << "IV: ";
+    for (unsigned char byte : GenKeyAndIV.iv) {
+        std::cout << static_cast<int>(byte) << " ";
+    }
+    std::cout << std::endl;
+
+
+    //AESEncryptCBC("C:\\Users\\admin\\Documents\\Code\\maldev\\files\\test.txt", "output.kma", key, iv);
+    //AESDecryptCBC("output.kma", "output.txt", key, iv);
+
 
     //printKeyAndIV(key, iv, size);
     
