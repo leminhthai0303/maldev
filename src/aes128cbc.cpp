@@ -386,18 +386,16 @@ void keyAndIvToFile(unsigned char *key, unsigned char *iv, int size) {
 }
 
 /* CHỈ DÙNG CHO TESTING, XOÁ NGAY KHI XONG PROJECT */
-void printKeyAndIV(unsigned char *key, unsigned char *iv, int size) { 
-    std::cout << "key: ";
-    for (int i = 0; i < size; i++)
-    {
-        std::cout << std::hex << (int)key[i];
+void printKeyAndIV(const std::vector<unsigned char> &key, const std::vector<unsigned char> &iv, int size) {
+    std::cout << "Key: ";
+    for (unsigned char byte : key) {
+        std::cout << static_cast<int>(byte) << " ";
     }
     std::cout << std::endl;
 
-    std::cout << "iv:  ";
-    for (int i = 0; i < size; i++)
-    {
-        std::cout << std::hex << (int)iv[i];
+    std::cout << "IV: ";
+    for (int i = 0; i < size; i++) {
+        std::cout << std::hex << static_cast<int>(iv[i]) << " ";
     }
     std::cout << std::endl;
 }
@@ -417,7 +415,7 @@ int main()
     
     KeyAndIV GenKeyAndIV = generateKeyAndIV(size, size);
 
-std::cout << "Key: ";
+    std::cout << "Key: ";
     for (unsigned char byte : GenKeyAndIV.key) {
         std::cout << static_cast<int>(byte) << " "; 
     }
@@ -434,7 +432,7 @@ std::cout << "Key: ";
     //AESDecryptCBC("output.kma", "output.txt", key, iv);
 
 
-    //printKeyAndIV(key, iv, size);
+    //printKeyAndIV(GenKeyAndIV.key, GenKeyAndIV.iv, size);
     
 
 //  unsigned char ciphertext[16];
