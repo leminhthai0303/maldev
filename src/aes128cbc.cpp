@@ -12,7 +12,7 @@ struct KeyAndIV {
     std::vector<unsigned char> iv;
 };
 
-const int size = 16;
+const int size = 8;
 
 // AES S-Box
 const unsigned char sbox[256] = {
@@ -212,7 +212,7 @@ KeyAndIV generateKeyAndIV(int key_size, int iv_size) {
     std::random_device rd;
     std::mt19937 gen(rd()); 
 
-    std::uniform_int_distribution<> dis(0, 15);
+    std::uniform_int_distribution<> dis(0, 255);
 
     std::vector<unsigned char> key(key_size);
     for (int i = 0; i < key_size; ++i) {
@@ -421,6 +421,17 @@ std::vector<unsigned char> hexStringToBytes(const std::string& hex) {
         bytes.push_back(byte);
     }
     return bytes;
+}
+
+std::string vectorToHex(const std::vector<unsigned char>& data) {
+    std::stringstream result;
+    
+    for (const auto& byte : data) {
+        // Chuyển đổi từng byte thành hex và thêm vào chuỗi kết quả
+        result << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+    }
+    
+    return result.str();
 }
 
 int main()
