@@ -12,7 +12,7 @@ struct KeyAndIV {
     std::vector<unsigned char> iv;
 };
 
-const int size = 8;
+const int size = 16;
 
 // AES S-Box
 const unsigned char sbox[256] = {
@@ -77,23 +77,47 @@ unsigned char mul3(unsigned char val)
     return mul2(val) ^ val;
 }
 
-// Key Expansion
-void KeyExpansion(const unsigned char *key, unsigned char *roundKeys)
+// Hàm nhân 9 trong trường Galois
+unsigned char mul9(unsigned char val)
 {
-    const int Nk = 4;  // Number of columns in key
-    const int Nb = 4;  // Number of columns in state (AES is always 4)
-    const int Nr = 10; // Number of rounds
+    return mul2(mul2(mul2(val))) ^ val;
+}
+
+// Hàm nhân 11 trong trường Galois
+unsigned char mul11(unsigned char val)
+{
+    return mul2(mul2(mul2(val)) ^ val) ^ val;
+}
+
+// Hàm nhân 13 trong trường Galois
+unsigned char mul13(unsigned char val)
+{
+    return mul2(mul2(mul2(val)) ^ mul2(val)) ^ val;
+}
+
+// Hàm nhân 14 trong trường Galois
+unsigned char mul14(unsigned char val)
+{
+    return mul2(mul2(mul2(val)) ^ mul2(val) ^ val);
+}
+
+// Key Expansion
+void KeyExpansion(const std::vector<unsigned char>& key, unsigned char *roundKeys)
+{
+    const int Nk = 4;  // Số cột trong khóa
+    const int Nb = 4;  // Số cột trong trạng thái (AES luôn là 4)
+    const int Nr = 10; // Số vòng
 
     unsigned char temp[4];
     int i = 0;
 
-    // Copy the original key to the first 16 bytes of the roundKeys
+    // Sao chép khóa ban đầu vào 16 byte đầu tiên của roundKeys
     for (; i < Nk * 4; ++i)
     {
         roundKeys[i] = key[i];
     }
 
-    // Generate the remaining bytes of the roundKeys
+    // Tạo các byte còn lại của roundKeys
     while (i < Nb * (Nr + 1) * 4)
     {
         for (int j = 0; j < 4; ++j)
@@ -212,7 +236,7 @@ KeyAndIV generateKeyAndIV(int key_size, int iv_size) {
     std::random_device rd;
     std::mt19937 gen(rd()); 
 
-    std::uniform_int_distribution<> dis(0, 255);
+    std::uniform_int_distribution<> dis(0, 15);
 
     std::vector<unsigned char> key(key_size);
     for (int i = 0; i < key_size; ++i) {
@@ -225,11 +249,28 @@ KeyAndIV generateKeyAndIV(int key_size, int iv_size) {
         iv[i] = static_cast<unsigned char>(dis(gen));
     }
 
-    return {key, iv};
+    KeyAndIV result;
+    for (const auto& byte : key) {
+        std::stringstream ss;
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+        std::string hex_byte = ss.str();
+        result.key.push_back(hex_byte[0]); // MSB
+        result.key.push_back(hex_byte[1]); // LSB
+    }
+
+    for (const auto& byte : iv) {
+        std::stringstream ss;
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+        std::string hex_byte = ss.str();
+        result.iv.push_back(hex_byte[0]); // MSB
+        result.iv.push_back(hex_byte[1]); // LSB
+    }
+
+    return result;
 }
 
 // AES Encryption với IV và khóa ngẫu nhiên
-void AESEncryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, const unsigned char *key, const unsigned char *iv)
+void AESEncryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, std::vector<unsigned char> &key, std::vector<unsigned char> &iv)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     if (!inputFile.is_open()) {
@@ -296,7 +337,72 @@ void AESEncryptCBC(const std::string &inputFilePath, const std::string &outputFi
     std::cout << "Encryption completed successfully. Encrypted " << blockCount << " blocks." << std::endl;
 }
 
-void AESDecryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, const unsigned char *key, const unsigned char *iv)
+//Hàm ngược dùng để decrypt
+// Hàm dịch các hàng ngược lại
+void InvShiftRows(unsigned char *state)
+{
+    unsigned char tmp[16];
+    for (int i = 0; i < 16; ++i)
+    {
+        tmp[i] = state[i];
+    }
+
+    state[1] = tmp[13];
+    state[5] = tmp[9];
+    state[9] = tmp[5];
+    state[13] = tmp[1];
+
+    state[2] = tmp[10];
+    state[6] = tmp[14];
+    state[10] = tmp[2];
+    state[14] = tmp[6];
+
+    state[3] = tmp[7];
+    state[7] = tmp[11];
+    state[11] = tmp[15];
+    state[15] = tmp[3];
+}
+
+// Hàm thực hiện pha giải mã SubBytes
+void InvSubBytes(unsigned char *state)
+{
+    for (int i = 0; i < 16; ++i)
+    {
+        state[i] = inv_sbox[state[i]];
+    }
+}
+
+// Hàm thực hiện pha giải mã MixColumns
+void InvMixColumns(unsigned char *state)
+{
+    unsigned char tmp[16];
+    for (int i = 0; i < 16; ++i)
+    {
+        tmp[i] = state[i];
+    }
+
+    state[0] = (unsigned char)(mul14(tmp[0]) ^ mul11(tmp[1]) ^ mul13(tmp[2]) ^ mul9(tmp[3]));
+    state[1] = (unsigned char)(mul9(tmp[0]) ^ mul14(tmp[1]) ^ mul11(tmp[2]) ^ mul13(tmp[3]));
+    state[2] = (unsigned char)(mul13(tmp[0]) ^ mul9(tmp[1]) ^ mul14(tmp[2]) ^ mul11(tmp[3]));
+    state[3] = (unsigned char)(mul11(tmp[0]) ^ mul13(tmp[1]) ^ mul9(tmp[2]) ^ mul14(tmp[3]));
+
+    state[4] = (unsigned char)(mul14(tmp[4]) ^ mul11(tmp[5]) ^ mul13(tmp[6]) ^ mul9(tmp[7]));
+    state[5] = (unsigned char)(mul9(tmp[4]) ^ mul14(tmp[5]) ^ mul11(tmp[6]) ^ mul13(tmp[7]));
+    state[6] = (unsigned char)(mul13(tmp[4]) ^ mul9(tmp[5]) ^ mul14(tmp[6]) ^ mul11(tmp[7]));
+    state[7] = (unsigned char)(mul11(tmp[4]) ^ mul13(tmp[5]) ^ mul9(tmp[6]) ^ mul14(tmp[7]));
+
+    state[8] = (unsigned char)(mul14(tmp[8]) ^ mul11(tmp[9]) ^ mul13(tmp[10]) ^ mul9(tmp[11]));
+    state[9] = (unsigned char)(mul9(tmp[8]) ^ mul14(tmp[9]) ^ mul11(tmp[10]) ^ mul13(tmp[11]));
+    state[10] = (unsigned char)(mul13(tmp[8]) ^ mul9(tmp[9]) ^ mul14(tmp[10]) ^ mul11(tmp[11]));
+    state[11] = (unsigned char)(mul11(tmp[8]) ^ mul13(tmp[9]) ^ mul9(tmp[10]) ^ mul14(tmp[11]));
+
+    state[12] = (unsigned char)(mul14(tmp[12]) ^ mul11(tmp[13]) ^ mul13(tmp[14]) ^ mul9(tmp[15]));
+    state[13] = (unsigned char)(mul9(tmp[12]) ^ mul14(tmp[13]) ^ mul11(tmp[14]) ^ mul13(tmp[15]));
+    state[14] = (unsigned char)(mul13(tmp[12]) ^ mul9(tmp[13]) ^ mul14(tmp[14]) ^ mul11(tmp[15]));
+    state[15] = (unsigned char)(mul11(tmp[12]) ^ mul13(tmp[13]) ^ mul9(tmp[14]) ^ mul14(tmp[15]));
+}
+
+void AESDecryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, std::vector<unsigned char> &key, std::vector<unsigned char> &iv)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     if (!inputFile.is_open()) {
@@ -331,16 +437,16 @@ void AESDecryptCBC(const std::string &inputFilePath, const std::string &outputFi
         std::memcpy(prevState, state, 16); // Save state for XORing with IV or previous ciphertext
 
         // AES decryption rounds
-        ShiftRows(state);
-        SubBytes(state);
+        InvShiftRows(state);
+        InvSubBytes(state);
         AddRoundKey(state, roundKeys + 160);
 
         for (int round = 9; round > 0; --round)
         {
-            MixColumns(state);
-            AddRoundKey(state, roundKeys + round * 16);
-            ShiftRows(state);
-            SubBytes(state);
+            InvShiftRows(state);
+            InvSubBytes(state);
+            AddRoundKey(state, roundKeys + (16 * round));
+            InvMixColumns(state);
         }
 
         // Final round without InvMixColumns
@@ -387,80 +493,17 @@ void keyAndIvToFile(unsigned char *key, unsigned char *iv, int size) {
     secret.close();
 }
 
-/* CHỈ DÙNG CHO TESTING, XOÁ NGAY KHI XONG PROJECT */
-void printKeyAndIV(unsigned char *key, unsigned char *iv, int size) { 
-    std::cout << "key: ";
-    for (int i = 0; i < size; i++)
-    {
-        std::cout << std::hex << (int)key[i];
-    }
-    std::cout << std::endl;
-
-    std::cout << "iv:  ";
-    for (int i = 0; i < size; i++)
-    {
-        std::cout << std::hex << (int)iv[i];
-    }
-    std::cout << std::endl;
-}
-
-std::string bytesToHex(const std::vector<unsigned char>& bytes) {
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (unsigned char byte : bytes) {
-        ss << std::setw(2) << static_cast<int>(byte);
-    }
-    return ss.str();
-}
-
-std::vector<unsigned char> hexStringToBytes(const std::string& hex) {
-    std::vector<unsigned char> bytes;
-    for (size_t i = 0; i < hex.length(); i += 2) {
-        std::string byteString = hex.substr(i, 2);
-        unsigned char byte = static_cast<unsigned char>(std::stoi(byteString, nullptr, 16));
-        bytes.push_back(byte);
-    }
-    return bytes;
-}
-
-std::string vectorToHex(const std::vector<unsigned char>& data) {
-    std::stringstream result;
-    
-    for (const auto& byte : data) {
-        // Chuyển đổi từng byte thành hex và thêm vào chuỗi kết quả
-        result << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
-    }
-    
-    return result.str();
-}
-
 int main()
 {
     std::string hexKeyInput, hexIVInput;
-    KeyAndIV GenKeyAndIV;
+    KeyAndIV GenKeyAndIV = generateKeyAndIV(size, size);
 
-    std::cout << std::endl;
-    std::cout << "Enter Key (hex): ";
-    std::cin >> hexKeyInput;
+    std::string path = "C:\\maldev\\text.txt";
+    std::string path1 = "C:\\maldev\\output.kma";
 
-    // Nhập IV dưới dạng hexadecimals
-    std::cout << "Enter IV (hex): ";
-    std::cin >> hexIVInput;
+    AESEncryptCBC(path, path1, GenKeyAndIV.key, GenKeyAndIV.iv);
 
-    // Chuyển đổi chuỗi hexadecimals thành vector unsigned char
-    GenKeyAndIV.key = hexStringToBytes(hexKeyInput);
-    GenKeyAndIV.iv = hexStringToBytes(hexIVInput);
-
-    std::cout << "Key (hex): ";
-    for (const auto& byte : GenKeyAndIV.key) {
-        printf("%02x", byte);
-    }
-    std::cout << std::endl;
-
-    std::cout << "IV (hex): ";
-    for (const auto& byte : GenKeyAndIV.iv) {
-        printf("%02x", byte);
-    }
+    //AESDecryptCBC(path1, path1, GenKeyAndIV.key, GenKeyAndIV.iv);
 
     return 0;
 }
