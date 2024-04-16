@@ -12,6 +12,8 @@ struct KeyAndIV {
     std::vector<unsigned char> iv;
 };
 
+const int size = 16;
+
 // AES S-Box
 const unsigned char sbox[256] = {
     // The S-box values for AES
@@ -210,7 +212,7 @@ KeyAndIV generateKeyAndIV(int key_size, int iv_size) {
     std::random_device rd;
     std::mt19937 gen(rd()); 
 
-    std::uniform_int_distribution<> dis(0, 255);
+    std::uniform_int_distribution<> dis(0, 15);
 
     std::vector<unsigned char> key(key_size);
     for (int i = 0; i < key_size; ++i) {
@@ -223,11 +225,28 @@ KeyAndIV generateKeyAndIV(int key_size, int iv_size) {
         iv[i] = static_cast<unsigned char>(dis(gen));
     }
 
-    return {key, iv};
+    KeyAndIV result;
+    for (const auto& byte : key) {
+        std::stringstream ss;
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+        std::string hex_byte = ss.str();
+        result.key.push_back(hex_byte[0]); // MSB
+        result.key.push_back(hex_byte[1]); // LSB
+    }
+
+    for (const auto& byte : iv) {
+        std::stringstream ss;
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+        std::string hex_byte = ss.str();
+        result.iv.push_back(hex_byte[0]); // MSB
+        result.iv.push_back(hex_byte[1]); // LSB
+    }
+
+    return result;
 }
 
 // AES Encryption với IV và khóa ngẫu nhiên
-void AESEncryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, const unsigned char *key, const unsigned char *iv)
+void AESEncryptCBC(const std::string &inputFilePath, const std::string &outputFilePath, std::vector<unsigned char> &key, std::vector<unsigned char> &iv)
 {
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     if (!inputFile.is_open()) {
@@ -385,65 +404,15 @@ void keyAndIvToFile(unsigned char *key, unsigned char *iv, int size) {
     secret.close();
 }
 
-/* CHỈ DÙNG CHO TESTING, XOÁ NGAY KHI XONG PROJECT */
-void printKeyAndIV(const std::vector<unsigned char> &key, const std::vector<unsigned char> &iv, int size) {
-    std::cout << "Key: ";
-    for (unsigned char byte : key) {
-        std::cout << static_cast<int>(byte) << " ";
-    }
-    std::cout << std::endl;
 
-    std::cout << "IV: ";
-    for (int i = 0; i < size; i++) {
-        std::cout << std::hex << static_cast<int>(iv[i]) << " ";
-    }
-    std::cout << std::endl;
-}
-
-std::string bytesToHex(const std::vector<unsigned char>& bytes) {
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (unsigned char byte : bytes) {
-        ss << std::setw(2) << static_cast<int>(byte);
-    }
-    return ss.str();
-}
 
 int main()
 {
-    const int size = 16;
-    
-    KeyAndIV GenKeyAndIV = generateKeyAndIV(size, size);
+    std::string hexKeyInput, hexIVInput;
+    KeyAndIV GenKeyAndIV = generateKeyAndIV(16, 16);
 
-    std::cout << "Key: ";
-    for (unsigned char byte : GenKeyAndIV.key) {
-        std::cout << static_cast<int>(byte) << " "; 
-    }
-    std::cout << std::endl;
+    std::string path = "../../files/test.txt";
+    AESEncryptCBC(path, "output.kma", GenKeyAndIV.key, GenKeyAndIV.iv);
 
-    std::cout << "IV: ";
-    for (unsigned char byte : GenKeyAndIV.iv) {
-        std::cout << static_cast<int>(byte) << " ";
-    }
-    std::cout << std::endl;
-
-
-    //AESEncryptCBC("C:\\Users\\admin\\Documents\\Code\\maldev\\files\\test.txt", "output.kma", key, iv);
-    //AESDecryptCBC("output.kma", "output.txt", key, iv);
-
-
-    //printKeyAndIV(GenKeyAndIV.key, GenKeyAndIV.iv, size);
-    
-
-//  unsigned char ciphertext[16];
-//    AESEncryptCBC(plaintext, ciphertext, key, iv);
-//
-//    std::cout << "Cipher text: ";
-//    for (int i = 0; i < 16; ++i)
-//    {
-//        std::cout << std::hex << (int)ciphertext[i];
-//    }
-//    std::cout << std::endl;
-//
-//    return 0;
+    return 0;
 }
