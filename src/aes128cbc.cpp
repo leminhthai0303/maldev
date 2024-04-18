@@ -40,22 +40,40 @@ void output(const char* title, uint8_t *data, uint32_t size) {
     std::cout << std::endl; // Xuống dòng sau khi xuất xong
 }
 
-void readFiles(std::string inputPath) {
-    std::ifstream f(inputPath, std::ios::binary);
+std::string ToHex(const std::string& s, bool upper_case)
+{
+    std::ostringstream ret;
 
-    if (!f.is_open()) {
-        std::cerr << "Error opening file: " << inputPath << std::endl;
-        return;
+    for (std::string::size_type i = 0; i < s.length(); ++i)
+    {
+        int z = s[i] & 0xff;
+        ret << std::hex << "0x" << std::setfill('0') << std::setw(2) << (upper_case ? std::uppercase : std::nouppercase) << z;
+        if (i < s.length() - 1)
+            ret << " ";
     }
 
-    char byte;
-    while (f.get(byte)) {
-        std::bitset<8> bits(byte);
-        std::cout << std::hex << std::uppercase << bits.to_ulong() << ' ';
-    }
-
-    f.close();
+    return ret.str();
 }
+
+void readFiles(std::string inputPath) {
+    std::ifstream f(inputPath, std::ios::in|std::ios::binary|std::ios::ate);
+    std::streampos size;
+    char *memblock;
+
+    if (f.is_open()) {
+        size = f.tellg();
+    memblock = new char [size];
+    f.seekg (0, std::ios::beg);
+    f.read (memblock, size);
+    f.close();
+
+    std::string tohexed = ToHex(std::string(memblock, size), true);
+    std::cout << tohexed << std::endl;
+    delete[] memblock;
+    }
+}
+
+
 
 int main() {
     // Example Key (128 bits / 16 bytes)
