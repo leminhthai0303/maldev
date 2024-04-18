@@ -1,75 +1,86 @@
 #include <iostream>
-#include <iomanip>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <cstdint>
+#include <filesystem>
 
-std::vector<std::vector<uint8_t>> convertToUint8Arrays(const std::vector<std::string>& strings) {
-    std::vector<std::vector<uint8_t>> byteArrays;
+namespace fs = std::filesystem;
 
-    // Duyệt qua từng chuỗi trong vector strings
-    for (const std::string& str : strings) {
-        // Khởi tạo mảng uint8_t với độ dài là độ dài của chuỗi str
-        std::vector<uint8_t> byteArray(str.begin(), str.end());
+struct FileItem {
+    std::string name;
+    bool isDirectory;
+};
 
-        // Thêm mảng này vào vector kết quả
-        byteArrays.push_back(byteArray);
+std::vector<FileItem> listFilesAndDirectories(const std::string& path) {
+    std::vector<FileItem> result;
+    try {
+        for (const auto& entry : fs::directory_iterator(path)) {
+            if (fs::is_directory(entry.path())) {
+                result.push_back({entry.path().filename().string(), true});
+            } else {
+                result.push_back({entry.path().filename().string(), false});
+            }
+        }
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
     }
-
-    return byteArrays;
-}
-
-std::vector<std::string> splitInto16CharStrings(const std::string& input) {
-    std::vector<std::string> result;
-    int inputLength = input.length();
-    
-    // Duyệt qua chuỗi đầu vào và cắt thành các chuỗi con có độ dài chính xác là 16 ký tự
-    for (int i = 0; i < inputLength; i += 16) {
-        // Lấy chuỗi con từ vị trí i đến i+15 (hoặc hết chuỗi nếu không đủ 16 ký tự)
-        std::string substring = input.substr(i, 16);
-
-        // Thêm chuỗi con vào vector kết quả
-        result.push_back(substring);
-    }
-    
     return result;
 }
 
-void output(const char* title, uint8_t *data, uint32_t size) {
-    std::cout << title; // Xuất chuỗi tiêu đề
-
-    // Đặt các phép toán xuất chuỗi dưới dạng hex
-    for (uint32_t index = 0; index < size; index++) {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<uint32_t>(data[index]);
-    }
-
-    std::cout << std::endl; // Xuống dòng sau khi xuất xong
-}
-
+// Function to increase the size of a string to the nearest multiple of 16
 std::string increaseSizeofString(const std::string& input) {
     size_t currentSize = input.size();
     size_t newSize = ((currentSize + 15) / 16) * 16;
     if (newSize > currentSize) {
-        return std::string(input) + std::string(newSize - currentSize, '\0');
+        return input + std::string(newSize - currentSize, '\0');
     }
     return input;
 }
 
-int main() {
-    std::string input;
-    std::getline(std::cin, input);
-    std::cout << input.size() << std::endl;
-    input = increaseSizeofString(input);
-    std::cout << input.size();
-    std::vector<std::string> substrings = splitInto16CharStrings(input);
-    std::vector<std::vector<uint8_t>> byteArrays = convertToUint8Arrays(substrings);
-    std::cout << "Các giá trị uint8_t tương ứng của chuỗi đã nhập:" << std::endl;
-    for (const auto& byteArray : byteArrays) {
-        std::cout << std::endl << byteArray.size() << std::endl;
-        for (uint8_t byte : byteArray) {
-            std::cout << static_cast<int>(byte) << " ";
+// Function to read the content of a file into a single string
+std::string readFiles(const std::string& filePath) {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filePath << std::endl;
+        return "";
+    }
+
+    // Determine file size
+    file.seekg(0, std::ios::end);
+    std::streampos fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Read the entire file content into a string
+    std::string fileContent(fileSize, '\0');
+    file.read(&fileContent[0], fileSize);
+    file.close();
+
+    // Increase size to nearest multiple of 16 if necessary
+    fileContent = increaseSizeofString(fileContent);
+
+    return fileContent;
+}
+
+void print(const std::vector<FileItem>& items, const std::string& prefix, const std::string& currentPath) {
+    for (const auto& item : items) {
+        std::cout << prefix;
+        if (item.isDirectory) {
+            std::cout << "Directory: " << item.name << std::endl;
+            std::string newPath = currentPath + item.name + "/";
+            std::vector<FileItem> subItems = listFilesAndDirectories(newPath);
+            print(subItems, prefix + "  ", newPath);
+        } else {
+            std::cout << "File: " << item.name << std::endl;
+            std::string fileContent = readFiles(currentPath + item.name);
+            std::cout << "File size: " << fileContent.size() << std::endl;
+            std::cout << fileContent << std::endl;
         }
     }
-    std::cout << std::endl;
+}
+
+int main() {
+    std::string path = "C:\\test\\";
+    std::vector<FileItem> items = listFilesAndDirectories(path);
+    print(items, "", path);
     return 0;
 }
