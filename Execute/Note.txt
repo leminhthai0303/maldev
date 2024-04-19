@@ -1,0 +1,3 @@
+- Đã thử dùng Iexpress để attach file Update.exe với file cài đặt game .exe khác.
+- Khi chạy file cài đặt game thì sẽ thực thi payload sau khi cài đặt xong game.
+* Windows defender của máy mục tiêu không detect được.
