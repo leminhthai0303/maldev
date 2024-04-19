@@ -1,0 +1,10 @@
+- Đưa payload vào hexPayload trong xor.cpp
+- Chạy code rồi copy payload đã được mã hoá qua file update.cpp, đưa vào encryptedHexPayload.
+- Chạy Update.cpp.
+- File Update.exe có thể chạy luôn để thực thi payload.
+
+
+============================================================
+- Đã thử với payload reverse TCP shell trong metasploit.
+- Quét trên VirusTotal, 8/71 detect dc Trojan.
+- Windows Defender trên máy mục tiêu Windows 10 không detect được
