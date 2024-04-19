@@ -6,38 +6,62 @@
 #include <random>
 #include "AES_128_CBC.h"
 
+namespace fs = std::filesystem;
+
 const int SIZE = 16;
 
-// Hàm sinh key và iv ngẫu nhiên
-void generateKeyAndIV(uint8_t *key, uint8_t *iv, int SIZE) {
+const std::string keyFilename = "key.txt";
+const std::string ivFilename = "iv.txt";
+
+void generateKeyAndIV(uint8_t *key, uint8_t *iv, int size)
+{
     std::random_device rd;
-    std::mt19937 gen(rd()); 
+    std::mt19937 gen(rd());
 
-    std::uniform_int_distribution<> dis(0, 255); // Đổi giá trị từ 0 đến 255 để tạo byte ngẫu nhiên
+    std::uniform_int_distribution<> dis(0, 255);
 
-    // Sinh key ngẫu nhiên
-    for (int i = 0; i < SIZE; ++i) {
-        key[i] = static_cast<uint8_t>(dis(gen)); // Ép kiểu sang uint8_t
-    }
-
-    // Sinh IV ngẫu nhiên
-    for (int i = 0; i < SIZE; ++i) {
-        iv[i] = static_cast<uint8_t>(dis(gen)); // Ép kiểu sang uint8_t
+    // Generate random key
+    for (int i = 0; i < size; ++i)
+    {
+        key[i] = static_cast<uint8_t>(dis(gen));
+        iv[i] = static_cast<uint8_t>(dis(gen));
     }
 }
 
-void output(const char* title, uint8_t *data, uint32_t size) {
-    std::cout << title; // Xuất chuỗi tiêu đề
-
-    // Đặt các phép toán xuất chuỗi dưới dạng hex
-    for (uint32_t index = 0; index < size; index++) {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<uint32_t>(data[index]);
+void saveToFile(const std::string &filename, const uint8_t *data, int size)
+{
+    std::ofstream file(filename, std::ios::binary);
+    if (file.is_open())
+    {
+        file.write(reinterpret_cast<const char *>(data), size);
+        file.close();
     }
-
-    std::cout << std::endl; // Xuống dòng sau khi xuất xong
 }
 
-namespace fs = std::filesystem;
+void readFromFile(const std::string &filename, uint8_t *data, int size)
+{
+    std::ifstream file(filename, std::ios::binary);
+    if (file.is_open())
+    {
+        file.read(reinterpret_cast<char *>(data), size);
+        file.close();
+    }
+}
+
+bool filesExist(const std::string &file1, const std::string &file2)
+{
+    return (fs::exists(file1) && fs::exists(file2));
+}
+
+void genKeyIfNeeded(uint8_t *key, uint8_t *iv)
+{
+    if (!filesExist(keyFilename, ivFilename))
+    {
+        generateKeyAndIV(key, iv, SIZE);
+        saveToFile(keyFilename, key, SIZE);
+        saveToFile(ivFilename, iv, SIZE);
+    }
+}
 
 struct FileItem
 {
@@ -107,31 +131,26 @@ std::string readFiles(const std::string &filePath)
     return fileContent;
 }
 
-void print(const std::vector<FileItem> &items, const std::string &prefix, const std::string &currentPath, uint8_t *key, uint8_t *iv)
+void enc(const std::vector<FileItem> &items, const std::string &prefix, const std::string &currentPath, const uint8_t *key, const uint8_t *iv)
 {
     for (const auto &item : items)
     {
         std::cout << prefix;
         if (item.isDirectory)
         {
-            std::string newPath = currentPath + item.name + "/";
+            std::string newPath = currentPath + item.name + "\\";
             std::vector<FileItem> subItems = listFilesAndDirectories(newPath);
-            print(subItems, prefix + "  ", newPath, key, iv);
+            enc(subItems, prefix + "  ", newPath, key, iv);
         }
         else
         {
+            std::cout << "File: " << item.name << std::endl;
             std::string fileContent = readFiles(currentPath + item.name);
             int size = fileContent.size();
             uint8_t data[size];
             for (size_t i = 0; i < size; i++)
             {
                 data[i] = static_cast<uint8_t>(fileContent[i]);
-            }
-
-            for(int i = 0; i< size/16; i ++){
-                char title[50];
-                sprintf(title, "original block %d: 0x", i + 1);
-                output(title, data + i * 16, 16);
             }
 
             AES_CTX ctx;
@@ -141,25 +160,44 @@ void print(const std::vector<FileItem> &items, const std::string &prefix, const 
             {
                 AES_Encrypt(&ctx, data + offset, data + offset);
             }
-            std::cout << std::endl;
-            for(int i = 0; i< size/16; i ++){
-                char title[50];
-                sprintf(title, "encrypted block %d: 0x", i + 1);
-                output(title, data + i * 16, 16);
+            std::cout << "Encrypted" << std::endl;
+            saveToFile(currentPath + item.name, data, sizeof(data));
+        }
+    }
+}
+
+void dec(const std::vector<FileItem> &items, const std::string &prefix, const std::string &currentPath, const uint8_t *key, const uint8_t *iv)
+{
+    for (const auto &item : items)
+    {
+        std::cout << prefix;
+        if (item.isDirectory)
+        {
+            std::string newPath = currentPath + item.name + "\\";
+            std::vector<FileItem> subItems = listFilesAndDirectories(newPath);
+            dec(subItems, prefix + "  ", newPath, key, iv);
+        }
+        else
+        {
+            std::cout << "File: " << item.name << std::endl;
+            std::string fileContent = readFiles(currentPath + item.name);
+            int size = fileContent.size();
+            uint8_t data[size];
+            for (size_t i = 0; i < size; i++)
+            {
+                data[i] = static_cast<uint8_t>(fileContent[i]);
             }
 
+            AES_CTX ctx;
             AES_DecryptInit(&ctx, key, iv);
-             for (unsigned int offset = 0; offset < size; offset += 16)
+
+            for (unsigned int offset = 0; offset < size; offset += 16)
             {
                 AES_Decrypt(&ctx, data + offset, data + offset);
             }
-            std::cout << std::endl;
-            for(int i = 0; i< size/16; i ++){
-                char title[50];
-                sprintf(title, "decrypted block %d: 0x", i + 1);
-                output(title, data + i * 16, 16);
-            }
-            std::cout << std::endl;
+
+            std::cout << "Decrypted" << std::endl;
+            saveToFile(currentPath + item.name, data, sizeof(data));
         }
     }
 }
