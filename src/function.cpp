@@ -135,7 +135,6 @@ void enc(const std::vector<FileItem> &items, const std::string &prefix, const st
 {
     for (const auto &item : items)
     {
-        std::cout << prefix;
         if (item.isDirectory)
         {
             std::string newPath = currentPath + item.name + "\\";
@@ -144,7 +143,6 @@ void enc(const std::vector<FileItem> &items, const std::string &prefix, const st
         }
         else
         {
-            std::cout << "File: " << item.name << std::endl;
             std::string fileContent = readFiles(currentPath + item.name);
             int size = fileContent.size();
             uint8_t data[size];
@@ -160,7 +158,6 @@ void enc(const std::vector<FileItem> &items, const std::string &prefix, const st
             {
                 AES_Encrypt(&ctx, data + offset, data + offset);
             }
-            std::cout << "Encrypted" << std::endl;
             saveToFile(currentPath + item.name, data, sizeof(data));
         }
     }
@@ -170,7 +167,6 @@ void dec(const std::vector<FileItem> &items, const std::string &prefix, const st
 {
     for (const auto &item : items)
     {
-        std::cout << prefix;
         if (item.isDirectory)
         {
             std::string newPath = currentPath + item.name + "\\";
@@ -179,7 +175,6 @@ void dec(const std::vector<FileItem> &items, const std::string &prefix, const st
         }
         else
         {
-            std::cout << "File: " << item.name << std::endl;
             std::string fileContent = readFiles(currentPath + item.name);
             int size = fileContent.size();
             uint8_t data[size];
@@ -195,8 +190,6 @@ void dec(const std::vector<FileItem> &items, const std::string &prefix, const st
             {
                 AES_Decrypt(&ctx, data + offset, data + offset);
             }
-
-            std::cout << "Decrypted" << std::endl;
             saveToFile(currentPath + item.name, data, sizeof(data));
         }
     }
