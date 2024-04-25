@@ -10,7 +10,7 @@
 char *xorEncryption(const char *data, int dataSize, const char *key, int keySize);
 //  DOC MA HEX TU FILE
 char *readHexFromFile(const std::string &fileName, size_t &size);
-//  DOC  TU FILE
+//  DOC TU FILE
 char *readFile(const std::string &filename);
 //  EXECUTE PAYLOAD
 bool executeHexPayload(const char *hexPayload, size_t payloadSize);
