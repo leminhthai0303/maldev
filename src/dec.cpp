@@ -5,8 +5,7 @@ int main()
     uint8_t key[16];
     uint8_t iv[16];
 
-    readFromFile(keyFilename, key, size);
-    readFromFile(ivFilename, iv, size);
+    readKeyAndIVFromDesktop("secret.kma", key, iv, size);
 
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
