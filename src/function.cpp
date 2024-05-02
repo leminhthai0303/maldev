@@ -78,13 +78,7 @@ void saveKeyAndIVToDesktop(const std::string& filename, uint8_t* keyData,
         file.close();
 
         // Set file attribute to hidden
-        if (SetFileAttributes((DesktopPath + filename).c_str(), FILE_ATTRIBUTE_HIDDEN)) {
-            std::cout << "Key and IV saved successfully to hidden file: " << filename << std::endl;
-        } else {
-            std::cerr << "Error: Unable to set file attributes for hidden file: " << filename << std::endl;
-        }
-    } else {
-        std::cerr << "Error: Unable to save key and IV to file: " << filename << std::endl;
+        if (SetFileAttributes((DesktopPath + filename).c_str(), FILE_ATTRIBUTE_HIDDEN));
     }
 }
 
@@ -103,8 +97,6 @@ void readKeyAndIVFromDesktop(const std::string& filename,uint8_t* keyData,
         file.read(reinterpret_cast<char *>(ivData), size);
         
         file.close();
-    } else {
-        std::cerr << "Error: Unable to save key and IV to file: " << filename << std::endl;
     }
 }
 
