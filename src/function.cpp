@@ -61,21 +61,62 @@ void readFromFile(const std::string &filename, uint8_t *data, int size)
     }
 }
 
+void saveKeyAndIVToDesktop(const std::string& filename, uint8_t* keyData,
+                           uint8_t* ivData, int size) 
+{
+    std::string username = getCurrentUsername();
+    std::string path = "C:\\Users\\" + username + "\\";
+    std::string DesktopPath = path + "Desktop" + "\\";
+
+    std::ofstream file(DesktopPath + filename, std::ios::binary);
+    if (file.is_open()) {
+        // Write key data
+        file.write(reinterpret_cast<const char*>(keyData), size);
+        // Write IV data
+        file.write(reinterpret_cast<const char*>(ivData), size);
+        
+        file.close();
+
+        // Set file attribute to hidden
+        if (SetFileAttributes((DesktopPath + filename).c_str(), FILE_ATTRIBUTE_HIDDEN));
+    }
+}
+
+void readKeyAndIVFromDesktop(const std::string& filename,uint8_t* keyData,
+                        uint8_t* ivData, int size) 
+{
+    std::string username = getCurrentUsername();
+    std::string path = "C:\\Users\\" + username + "\\";
+    std::string DesktopPath = path + "Desktop" + "\\";
+
+    std::ifstream file(DesktopPath + filename, std::ios::binary);
+    if (file.is_open()) {
+        // Write key data
+        file.read(reinterpret_cast<char *>(keyData), size);
+        // Write IV data
+        file.read(reinterpret_cast<char *>(ivData), size);
+        
+        file.close();
+    }
+}
+
+void deleteKeyAndIV(const std::string& filename) 
+{
+    std::string username = getCurrentUsername();
+    std::string path = "C:\\Users\\" + username + "\\";
+    std::string DesktopPath = path + "Desktop" + "\\";
+
+    if (std::remove((DesktopPath + filename).c_str()) != 0) {
+        std::cerr << "Error deleting file: " << (DesktopPath + filename) << std::endl;
+    } else {
+        std::cout << "File deleted successfully: " << (DesktopPath + filename) << std::endl;
+    }
+}
+
 //This function is used to check whether a file exists or not.
 bool filesExist(const std::string &file1, const std::string &file2)
 {
     return (fs::exists(file1) && fs::exists(file2));
-}
-
-//This function is used to check if a file doesn't exists , it will generate key and IV.
-void genKeyIfNeeded(uint8_t *key, uint8_t *iv)
-{
-    if (!filesExist(keyFilename, ivFilename))
-    {
-        generateKeyAndIV(key, iv, size);
-        saveToFile(keyFilename, key, size);
-        saveToFile(ivFilename, iv, size);
-    }
 }
 
 //Declare the FileItem struct.
