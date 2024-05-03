@@ -20,12 +20,12 @@ std::string getCurrentUsername() {
     return std::string(username);
 }
 
-bool filesExist(const std::string &file1)
+bool filesExist(const std::string &file)
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
     std::string DesktopPath = path + "Desktop" + "\\";
-    return fs::exists(DesktopPath+file1);
+    return fs::exists(DesktopPath+file);
 }
 
 bool isInStartup(const std::string& appName) {
