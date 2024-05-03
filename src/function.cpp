@@ -113,10 +113,12 @@ void deleteKeyAndIV(const std::string& filename)
     }
 }
 
-//This function is used to check whether a file exists or not.
-bool filesExist(const std::string &file1, const std::string &file2)
+bool filesExist(const std::string &file)
 {
-    return (fs::exists(file1) && fs::exists(file2));
+    std::string username = getCurrentUsername();
+    std::string path = "C:\\Users\\" + username + "\\";
+    std::string DesktopPath = path + "Desktop" + "\\";
+    return fs::exists(DesktopPath+file);
 }
 
 //Declare the FileItem struct.
