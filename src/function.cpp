@@ -12,9 +12,6 @@ namespace fs = std::filesystem;
 
 const int size = 16;
 
-const std::string keyFilename = "key.txt";
-const std::string ivFilename = "iv.txt";
-
 //This function is used to retrieve the username.
 std::string getCurrentUsername() {
     char username[UNLEN + 1];
@@ -61,8 +58,7 @@ void readFromFile(const std::string &filename, uint8_t *data, int size)
     }
 }
 
-void saveKeyAndIVToDesktop(const std::string& filename, uint8_t* keyData,
-                           uint8_t* ivData, int size) 
+void saveKeyAndIVToDesktop(const std::string& filename, uint8_t* keyData, uint8_t* ivData, int size) 
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
@@ -82,8 +78,7 @@ void saveKeyAndIVToDesktop(const std::string& filename, uint8_t* keyData,
     }
 }
 
-void readKeyAndIVFromDesktop(const std::string& filename,uint8_t* keyData,
-                        uint8_t* ivData, int size) 
+void readKeyAndIVFromDesktop(const std::string& filename, uint8_t* keyData, uint8_t* ivData, int size) 
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
@@ -105,12 +100,7 @@ void deleteKeyAndIV(const std::string& filename)
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
     std::string DesktopPath = path + "Desktop" + "\\";
-
-    if (std::remove((DesktopPath + filename).c_str()) != 0) {
-        std::cerr << "Error deleting file: " << (DesktopPath + filename) << std::endl;
-    } else {
-        std::cout << "File deleted successfully: " << (DesktopPath + filename) << std::endl;
-    }
+    std::remove((DesktopPath + filename).c_str());
 }
 
 bool filesExist(const std::string &file)
