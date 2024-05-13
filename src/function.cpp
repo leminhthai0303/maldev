@@ -123,7 +123,14 @@ bool filesExist(const std::string &file)
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
-    std::string DesktopPath = path + "Desktop" + "\\";
+    std::string OneDrivePath = path + "OneDrive" + "\\";
+    std::string DesktopPath = OneDrivePath + "Desktop" + "\\";
+
+    if (fs::exists(OneDrivePath) && fs::is_directory(OneDrivePath) && !fs::exists(DesktopPath))
+    {
+        DesktopPath = path + "Desktop" + "\\";
+    }
+    
     return fs::exists(DesktopPath + file);
 }
 
