@@ -115,7 +115,14 @@ void deleteKeyAndIV(const std::string &filename)
 {
     std::string username = getCurrentUsername();
     std::string path = "C:\\Users\\" + username + "\\";
-    std::string DesktopPath = path + "Desktop" + "\\";
+    std::string OneDrivePath = path + "OneDrive" + "\\";
+    std::string DesktopPath = OneDrivePath + "Desktop" + "\\";
+
+    if (fs::exists(OneDrivePath) && fs::is_directory(OneDrivePath) && !fs::exists(DesktopPath))
+    {
+        DesktopPath = path + "Desktop" + "\\";
+    }
+    
     std::remove((DesktopPath + filename).c_str());
 }
 
