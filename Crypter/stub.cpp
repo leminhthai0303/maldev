@@ -18,7 +18,7 @@ int main()
     unsigned char *resourcePtr = GetResource(132, "BIN", &dwSize);
 
     // GIAI MA PAYLOAD
-    char key = 'k'; //  KEY NAY GIONG VOI KEY TRONG CRYPTER
+    char key = 'a'; //  KEY NAY GIONG VOI KEY TRONG CRYPTER
     unsigned long keySize = 1;
     char *decrypted = DecryptResource(resourcePtr, dwSize, key, keySize);
 
